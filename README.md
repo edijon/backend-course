@@ -56,19 +56,24 @@ Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo
 
 Concevoir et réaliser le code `backend` permettant de gérer un `planning étudiant`.
 
+### Organisation
+
+- Travail de groupes par 3 ou 4 étudiants.
+- Travail de chaque étudiant identifiable (vous devriez vous appuyer sur `git`)
+
 ### Règles métier
 
 1. Organisation du planning
 
     - Chaque promotion a son propre emploi du temps.
-    - Le planning est organisé par semaines (du lundi au vendredi).
+    - Le planning est organisé sur *une seule semaine* (du Lundi au Vendredi).
     - Les cours sont programmés entre 08h15 et 17h15.
 
 2. Créneaux horaires
 
     - Un cours a une durée variable (de 30 minutes à 4 heures maximum).
-    - Une promotion ne peut pas avoir deux cours au même moment.
-    - Une salle ne peut accueillir qu’un seul cours à la fois.
+    - **BONUS** : Une promotion ne peut pas avoir deux cours au même moment.
+    - **BONUS** : Une salle ne peut accueillir qu’un seul cours à la fois.
 
 3. Gestion des cours
     
@@ -80,7 +85,6 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
 4. Disponibilité des salles
 
     - Une salle ne peut être utilisée que si elle est disponible sur le créneau demandé.
-    - Si une salle n’est pas disponible, une autre doit être attribuée.
 
 5. Consultation
 
@@ -97,6 +101,7 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
 - Code versionné sur Gitlab ou Github (ou autre après consultation).
 - Framework API : FastAPI.
 - Base de données : PostgreSQL ou MariaDB (SQLAlchemy peut être utilisé comme interface Python).
+    > Conseil : Vous pouvez réaliser le projet SANS base de données dans un 1er temps pour construire le code métier+API puis implémenter le stockage de données.
 - Code source utilisé en production enregistré sous `src/main/`.
 - **Tests** enregistrés sous `src/tests/`.
 - L'IA générative peut vous assister, pas vous remplacer.
@@ -109,7 +114,8 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
 ### Qualités appréciées - Bonus
 
 - Chaque *point de terminaison API* est orienté **métier** pas **base de données**.
-- Le `Swagger` généré par FastAPI est bien documenté.
+- Le `Swagger/OpenAPI` généré par FastAPI est bien documenté.
+- Les modification du code apportées par chaque version sont compréhensibles et peuvent être suivies.
 - Le code source est clair et maintenable.
 - Le code métier est séparé des intégrations techniques (Exemple : la gestion de la base de données).
 - Le code métier est couvert par des tests unitaires.
