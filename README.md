@@ -1,11 +1,15 @@
-# backend-course
+# Backend-course
 
 Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo.com/).
 
 ## Sommaire
 
 1. [Préparer son environnement de développement](#préparer-son-environnement-de-développement)
-2. [Consignes du projet](#consignes-du-projet)
+2. [Consignes projet](#consignes-projet)
+    - [Objet](#objet)
+    - [Règles métier](#règles-métier)
+    - [Règles techniques](#règles-techniques)
+    - [Qualités appréciées - Bonus](#qualités-appréciées---bonus)
 
 
 ## Préparer son environnement de développement
@@ -45,3 +49,73 @@ Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo
     #  server   Server started at http://127.0.0.1:8000
     #  ...
     ```
+
+## Consignes projet
+
+### Objet
+
+Concevoir et réaliser le code `backend` permettant de gérer un `planning étudiant`.
+
+### Règles métier
+
+1. Organisation du planning
+
+    - Chaque promotion a son propre emploi du temps.
+    - Le planning est organisé par semaines (du lundi au vendredi).
+    - Les cours sont programmés entre 08h15 et 17h15.
+    Créneaux horaires
+
+2. Créneaux horaires
+
+    - Un cours a une durée variable (de 30 minutes à 4 heures maximum).
+    - Une promotion ne peut pas avoir deux cours au même moment.
+    - Une salle ne peut accueillir qu’un seul cours à la fois.
+
+3. Gestion des cours
+    
+    - Chaque cours a un intitulé, un enseignant, une salle et une promotion concernée.
+    - Certains cours nécessitent une salle spécifique (ex : Fablab).
+    - Un cours peut être en autonomie ou dirigé par un enseignant.
+    - Un cours peut être annulé ou modifié.
+
+4. Disponibilité des salles
+
+    - Une salle ne peut être utilisée que si elle est disponible sur le créneau demandé.
+    - Si une salle n’est pas disponible, une autre doit être attribuée.
+
+5. Consultation
+
+    - N'importe qui doit pouvoir consulter l'emploi du temps pour une semaine donnée ou une date donnée.
+
+6. Mise à jour du planning
+
+    - Seul un utilisateur autorisé peut éditer le planning.
+
+### Règles techniques
+
+- Chaque étudiant travaillera sur son fork du projet (accessible par l'enseignant).
+- Langage de programmation : Python 3.10+.
+- Code versionné sur Gitlab ou Github (ou autre après consultation).
+- Framework API : FastAPI.
+- Base de données : PostgreSQL ou MariaDB (SQLAlchemy peut être utilisé comme interface Python).
+- Code source utilisé en production enregistré sous `src/main/`.
+- **Tests** enregistrés sous `src/tests/`.
+- L'IA générative peut vous assister, pas vous remplacer.
+- Il doit être possible d'exécuter le projet en local.
+- [Flake8](https://flake8.pycqa.org/en/latest/) sera utilisé pour le `lint` du code source.
+- [Pytest](http://docs.pytest.org/en/stable/) ou [unittest](https://docs.python.org/3/library/unittest.html) peuvent être utilisés pour tester le code source.
+- [Coverage](https://coverage.readthedocs.io/en/7.6.12/) sera utilisé pour mesurer la couverture du code par les tests.
+- [Bandit](https://bandit.readthedocs.io/en/latest/) sera utilisé pour identifier des vulnérabilités communes dans le code source.
+
+### Qualités appréciées - Bonus
+
+- Chaque *point de terminaison API* est orienté **métier** pas **base de données**.
+- Le `Swagger` généré par FastAPI est bien documenté.
+- Le code source est clair et maintenable.
+- Le code métier est séparé des intégrations techniques (Exemple : la gestion de la base de données).
+- Le code métier est couvert par des tests unitaires.
+- Les intégrations techniques sont couvertes par des tests d'intégrations.
+- Le fonctionnement global est vérifié par `Github actions` ou `Gitlab CI`.
+- Des journaux, `logs`, permettent de suivre le fonctionnement de l'application et comprendre les erreurs.
+- La documentation permet à un profil développeur de contribuer au projet.
+- La documentation permet à un profil développeur d'instancier le projet.
