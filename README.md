@@ -63,7 +63,6 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
     - Chaque promotion a son propre emploi du temps.
     - Le planning est organisé par semaines (du lundi au vendredi).
     - Les cours sont programmés entre 08h15 et 17h15.
-    Créneaux horaires
 
 2. Créneaux horaires
 
