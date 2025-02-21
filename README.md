@@ -60,6 +60,7 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
 
 - Travail de groupes par 3 ou 4 étudiants.
 - Travail de chaque étudiant identifiable (vous devriez vous appuyer sur `git`)
+- A la fin de chaque session de travail en autonomie, les étudiants envoient un compte rendu succint : travail réalisé, travail qui sera ensuite réalisé, difficultés rencontrées/questions (3-4 max).
 
 ### Règles métier
 
@@ -99,6 +100,7 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
 - Chaque étudiant travaillera sur son fork du projet (accessible par l'enseignant).
 - Langage de programmation : Python 3.10+.
 - Code versionné sur Gitlab ou Github (ou autre après consultation).
+    - Aucun secret stocké en clair !
 - Framework API : FastAPI.
 - Base de données : PostgreSQL ou MariaDB (SQLAlchemy peut être utilisé comme interface Python).
     > Conseil : Vous pouvez réaliser le projet SANS base de données dans un 1er temps pour construire le code métier+API puis implémenter le stockage de données.
