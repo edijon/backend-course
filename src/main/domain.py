@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel, ConfigDict
 from typing import List
+from pydantic import Field, model_validator
+from datetime import time, timedelta
 
 
 class BaseIdentifier(BaseModel):
@@ -54,4 +56,113 @@ class ITeacherRepository(ABC):
 
     @abstractmethod
     def find_all(self) -> List[Teacher]:
+        raise NotImplementedError
+
+
+class CourseId(BaseIdentifier):
+    """Value object holding Course identity."""
+
+
+class Course(BaseModel):
+    """Aggregate root, entity holding course."""
+    id: CourseId
+    name: str
+
+
+class ICourseRepository(ABC):
+    """Interface for handling courses persistence."""
+    @abstractmethod
+    def next_identity(self) -> CourseId:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_all(self) -> List[Course]:
+        raise NotImplementedError
+
+
+class RoomId(BaseIdentifier):
+    """Value object holding Room identity."""
+
+
+class Room(BaseModel):
+    """Aggregate root, entity holding room."""
+    id: RoomId
+    name: str
+    description: str
+
+
+class IRoomRepository(ABC):
+    """Interface for handling rooms persistence."""
+    @abstractmethod
+    def next_identity(self) -> RoomId:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_all(self) -> List[Room]:
+        raise NotImplementedError
+
+
+class PlanningSlotId(BaseIdentifier):
+    """Value object holding PlanningSlot identity."""
+
+
+class PlanningSlot(BaseModel):
+    """
+    PlanningSlot is an aggregate root entity that holds the details of a planning slot.
+    Attributes:
+        id (PlanningSlotId): Unique identifier for the planning slot.
+        hours_start (int): Starting hour of the planning slot (must be between 8 and 17 inclusive).
+        minutes_start (int): Starting minute of the planning slot (must be between 0 and 59 inclusive).
+        hours_end (int): Ending hour of the planning slot (must be between 8 and 17 inclusive).
+        minutes_end (int): Ending minute of the planning slot (must be between 0 and 59 inclusive).
+        promotion (Promotion): Promotion associated with the planning slot.
+        teacher (Teacher): Teacher assigned to the planning slot.
+        course (Course): Course associated with the planning slot.
+        room (Room): Room where the planning slot will take place.
+    Validators:
+        check_end_time: Ensures that the end time is after the start time.
+        check_duration: Ensures that the duration of the slot is at least 30 minutes and at most 4 hours.
+        check_start_time: Ensures that the first slot can only start at 08:15 or later.
+        check_end_time_limit: Ensures that the last slot can only end at 17:15 or earlier.
+    Note:
+        The Field(..., ge=8, le=17) and similar constraints are used to enforce that the values are within the specified range.
+    """
+    id: PlanningSlotId
+    hours_start: int = Field(..., ge=8, le=17)
+    minutes_start: int = Field(..., ge=0, le=59)
+    hours_end: int = Field(..., ge=8, le=17)
+    minutes_end: int = Field(..., ge=0, le=59)
+    promotion: Promotion
+    teacher: Teacher
+    course: Course
+    room: Room
+
+    @model_validator(mode="after")
+    def check_times(self):
+        start_time = time(self.hours_start, self.minutes_start)
+        end_time = time(self.hours_end, self.minutes_end)
+        if end_time <= start_time:
+            raise ValueError("End time must be after start time")
+        duration = timedelta(
+            hours=end_time.hour, minutes=end_time.minute
+        ) - timedelta(hours=start_time.hour, minutes=start_time.minute)
+        if duration < timedelta(minutes=30):
+            raise ValueError("Slot duration must be at least 30 minutes")
+        if duration > timedelta(hours=4):
+            raise ValueError("Slot duration must be at most 4 hours")
+        if self.hours_start == 8 and self.minutes_start < 15:
+            raise ValueError("First slot can only start at 08:15 or later")
+        if self.hours_end == 17 and self.minutes_end > 15:
+            raise ValueError("Last slot can only end at 17:15 or earlier")
+        return self
+
+
+class IPlanningSlotRepository(ABC):
+    """Interface for handling planning slots persistence."""
+    @abstractmethod
+    def next_identity(self) -> PlanningSlotId:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_all(self) -> List[PlanningSlot]:
         raise NotImplementedError
