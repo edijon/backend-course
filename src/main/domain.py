@@ -189,7 +189,7 @@ class Planning(BaseModel):
     @model_validator(mode="after")
     def check_no_collisions(self):
         for i, slot1 in enumerate(self.slots):
-            # This loop iterates over each slot in self.slots. 
+            # This loop iterates over each slot in self.slots.
             # The enumerate function provides both the index (i) and the slot (slot1).
             for j, slot2 in enumerate(self.slots):
                 if i != j and self._slots_collide(slot1, slot2):

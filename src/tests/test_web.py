@@ -30,7 +30,6 @@ class TestPromotionsEndpoint:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR, response.text
 
 
-
 class TestPlanningEndpoint:
     """Test the planning endpoint """
     def test_given_repository_when_get_planning_then_get_200_and_planning_ordered(self):

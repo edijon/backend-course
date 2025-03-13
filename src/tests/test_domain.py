@@ -2,10 +2,12 @@ from src.main.domain import (
     Promotion, PromotionId, Teacher, TeacherId, Course, CourseId, Room, RoomId,
     PlanningSlot, PlanningSlotId, Planning, PlanningId)
 from datetime import date
+import pytest
 
 
 class TestPromotion:
     """Test cases for Promotion class."""
+
     def test_given_study_year_and_diploma_and_name_when_create_promotion_then_return_promotion(self):
         # Given
         promotion_id = PromotionId(id="1")
@@ -22,6 +24,7 @@ class TestPromotion:
 
 class TestTeacher:
     """Test cases for Teacher class."""
+
     def test_given_name_and_firstname_when_create_teacher_then_return_teacher(self):
         # Given
         teacher_id = TeacherId(id="1")
@@ -36,6 +39,7 @@ class TestTeacher:
 
 class TestCourse:
     """Test cases for Course class."""
+
     def test_given_name_when_create_course_then_return_course(self):
         # Given
         course_id = CourseId(id="1")
@@ -48,6 +52,7 @@ class TestCourse:
 
 class TestRoom:
     """Test cases for Room class."""
+
     def test_given_name_and_description_when_create_room_then_return_room(self):
         # Given
         room_id = RoomId(id="1")
@@ -62,7 +67,17 @@ class TestRoom:
 
 class TestPlanningSlot:
     """Test cases for PlanningSlot class."""
-    def test_given_valid_times_and_entities_when_create_planning_slot_then_return_planning_slot(self):
+
+    @pytest.fixture
+    def common_entities(self):
+        return {
+            "promotion": Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            "teacher": Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            "course": Course(id=CourseId(id="1"), name="Mathematics"),
+            "room": Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        }
+
+    def test_given_valid_times_and_entities_when_create_planning_slot_then_return_planning_slot(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
         date_start = "2021-09-01"
@@ -70,10 +85,6 @@ class TestPlanningSlot:
         minutes_start = 0
         hours_end = 10
         minutes_end = 0
-        promotion = Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf")
-        teacher = Teacher(id=TeacherId(id="1"), name="Doe", firstname="John")
-        course = Course(id=CourseId(id="1"), name="Mathematics")
-        room = Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
         # When
         planning_slot = PlanningSlot(
             id=planning_slot_id,
@@ -82,10 +93,7 @@ class TestPlanningSlot:
             minutes_start=minutes_start,
             hours_end=hours_end,
             minutes_end=minutes_end,
-            promotion=promotion,
-            teacher=teacher,
-            course=course,
-            room=room
+            **common_entities
         )
         # Then
         assert planning_slot.date_start == date.fromisoformat(date_start)
@@ -93,12 +101,12 @@ class TestPlanningSlot:
         assert planning_slot.minutes_start == minutes_start
         assert planning_slot.hours_end == hours_end
         assert planning_slot.minutes_end == minutes_end
-        assert planning_slot.promotion == promotion
-        assert planning_slot.teacher == teacher
-        assert planning_slot.course == course
-        assert planning_slot.room == room
+        assert planning_slot.promotion == common_entities["promotion"]
+        assert planning_slot.teacher == common_entities["teacher"]
+        assert planning_slot.course == common_entities["course"]
+        assert planning_slot.room == common_entities["room"]
 
-    def test_given_invalid_end_time_when_create_planning_slot_then_raise_value_error(self):
+    def test_given_invalid_end_time_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
         date_start = "2021-09-01"
@@ -106,12 +114,8 @@ class TestPlanningSlot:
         minutes_start = 0
         hours_end = 9
         minutes_end = 0
-        promotion = Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf")
-        teacher = Teacher(id=TeacherId(id="1"), name="Doe", firstname="John")
-        course = Course(id=CourseId(id="1"), name="Mathematics")
-        room = Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='End time must be after start time'):
             PlanningSlot(
                 id=planning_slot_id,
                 date_start=date_start,
@@ -119,15 +123,10 @@ class TestPlanningSlot:
                 minutes_start=minutes_start,
                 hours_end=hours_end,
                 minutes_end=minutes_end,
-                promotion=promotion,
-                teacher=teacher,
-                course=course,
-                room=room
+                **common_entities
             )
-        except ValueError as e:
-            assert 'End time must be after start time' in str(e)
 
-    def test_given_invalid_duration_when_create_planning_slot_then_raise_value_error(self):
+    def test_given_invalid_duration_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
         date_start = "2021-09-01"
@@ -135,12 +134,8 @@ class TestPlanningSlot:
         minutes_start = 0
         hours_end = 9
         minutes_end = 15
-        promotion = Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf")
-        teacher = Teacher(id=TeacherId(id="1"), name="Doe", firstname="John")
-        course = Course(id=CourseId(id="1"), name="Mathematics")
-        room = Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Slot duration must be at least 30 minutes'):
             PlanningSlot(
                 id=planning_slot_id,
                 date_start=date_start,
@@ -148,15 +143,10 @@ class TestPlanningSlot:
                 minutes_start=minutes_start,
                 hours_end=hours_end,
                 minutes_end=minutes_end,
-                promotion=promotion,
-                teacher=teacher,
-                course=course,
-                room=room
+                **common_entities
             )
-        except ValueError as e:
-            assert 'Slot duration must be at least 30 minutes' in str(e)
 
-    def test_given_duration_exceeds_four_hours_when_create_planning_slot_then_raise_value_error(self):
+    def test_given_duration_exceeds_four_hours_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
         date_start = "2021-09-01"
@@ -164,12 +154,8 @@ class TestPlanningSlot:
         minutes_start = 0
         hours_end = 13
         minutes_end = 1
-        promotion = Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf")
-        teacher = Teacher(id=TeacherId(id="1"), name="Doe", firstname="John")
-        course = Course(id=CourseId(id="1"), name="Mathematics")
-        room = Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Slot duration must be at most 4 hours'):
             PlanningSlot(
                 id=planning_slot_id,
                 date_start=date_start,
@@ -177,15 +163,10 @@ class TestPlanningSlot:
                 minutes_start=minutes_start,
                 hours_end=hours_end,
                 minutes_end=minutes_end,
-                promotion=promotion,
-                teacher=teacher,
-                course=course,
-                room=room
+                **common_entities
             )
-        except ValueError as e:
-            assert 'Slot duration must be at most 4 hours' in str(e)
 
-    def test_given_invalid_start_time_when_create_planning_slot_then_raise_value_error(self):
+    def test_given_invalid_start_time_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
         date_start = "2021-09-01"
@@ -193,12 +174,8 @@ class TestPlanningSlot:
         minutes_start = 0
         hours_end = 9
         minutes_end = 0
-        promotion = Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf")
-        teacher = Teacher(id=TeacherId(id="1"), name="Doe", firstname="John")
-        course = Course(id=CourseId(id="1"), name="Mathematics")
-        room = Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='First slot can only start at 08:15 or later'):
             PlanningSlot(
                 id=planning_slot_id,
                 date_start=date_start,
@@ -206,15 +183,10 @@ class TestPlanningSlot:
                 minutes_start=minutes_start,
                 hours_end=hours_end,
                 minutes_end=minutes_end,
-                promotion=promotion,
-                teacher=teacher,
-                course=course,
-                room=room
+                **common_entities
             )
-        except ValueError as e:
-            assert 'First slot can only start at 08:15 or later' in str(e)
 
-    def test_given_invalid_end_time_limit_when_create_planning_slot_then_raise_value_error(self):
+    def test_given_invalid_end_time_limit_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
         date_start = "2021-09-01"
@@ -222,12 +194,8 @@ class TestPlanningSlot:
         minutes_start = 0
         hours_end = 17
         minutes_end = 30
-        promotion = Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf")
-        teacher = Teacher(id=TeacherId(id="1"), name="Doe", firstname="John")
-        course = Course(id=CourseId(id="1"), name="Mathematics")
-        room = Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Last slot can only end at 17:15 or earlier'):
             PlanningSlot(
                 id=planning_slot_id,
                 date_start=date_start,
@@ -235,19 +203,27 @@ class TestPlanningSlot:
                 minutes_start=minutes_start,
                 hours_end=hours_end,
                 minutes_end=minutes_end,
-                promotion=promotion,
-                teacher=teacher,
-                course=course,
-                room=room
+                **common_entities
             )
-        except ValueError as e:
-            assert 'Last slot can only end at 17:15 or earlier' in str(e)
+
 
 class TestPlanning:
     """Test cases for Planning class."""
-class TestPlanning:
-    """Test cases for Planning class."""
-    def test_given_valid_slots_when_create_planning_then_return_planning(self):
+
+    @pytest.fixture
+    def common_entities(self):
+        return {
+            "promotion1": Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            "promotion2": Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
+            "teacher1": Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            "teacher2": Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
+            "course1": Course(id=CourseId(id="1"), name="Mathematics"),
+            "course2": Course(id=CourseId(id="2"), name="Physics"),
+            "room1": Room(id=RoomId(id="1"), name="Room 101", description="First floor room"),
+            "room2": Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+        }
+
+    def test_given_valid_slots_when_create_planning_then_return_planning(self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         slot1 = PlanningSlot(
@@ -257,10 +233,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         slot2 = PlanningSlot(
             id=PlanningSlotId(id="2"),
@@ -269,10 +245,10 @@ class TestPlanning:
             minutes_start=15,
             hours_end=11,
             minutes_end=15,
-            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
-            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
-            course=Course(id=CourseId(id="2"), name="Physics"),
-            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+            promotion=common_entities["promotion2"],
+            teacher=common_entities["teacher2"],
+            course=common_entities["course2"],
+            room=common_entities["room2"]
         )
         # When
         planning = Planning(id=planning_id, slots=[slot1, slot2])
@@ -280,7 +256,7 @@ class TestPlanning:
         assert planning.id == planning_id
         assert len(planning.slots) == 2
 
-    def test_given_colliding_slots_when_create_planning_then_raise_value_error(self):
+    def test_given_colliding_slots_when_create_planning_then_raise_value_error(self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         slot1 = PlanningSlot(
@@ -290,10 +266,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         slot2 = PlanningSlot(
             id=PlanningSlotId(id="2"),
@@ -302,18 +278,17 @@ class TestPlanning:
             minutes_start=30,
             hours_end=10,
             minutes_end=30,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
             Planning(id=planning_id, slots=[slot1, slot2])
-        except ValueError as e:
-            assert 'Collision detected between slot 1 and slot 2' in str(e)
 
-    def test_given_valid_slots_with_different_promotions_teachers_rooms_when_create_planning_then_return_planning(self):
+    def test_given_valid_slots_with_different_promotions_teachers_rooms_when_create_planning_then_return_planning(
+            self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         slot1 = PlanningSlot(
@@ -323,10 +298,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         slot2 = PlanningSlot(
             id=PlanningSlotId(id="2"),
@@ -335,10 +310,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
-            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
-            course=Course(id=CourseId(id="2"), name="Physics"),
-            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+            promotion=common_entities["promotion2"],
+            teacher=common_entities["teacher2"],
+            course=common_entities["course2"],
+            room=common_entities["room2"]
         )
         # When
         planning = Planning(id=planning_id, slots=[slot1, slot2])
@@ -346,7 +321,7 @@ class TestPlanning:
         assert planning.id == planning_id
         assert len(planning.slots) == 2
 
-    def test_given_slots_with_same_teacher_when_create_planning_then_raise_value_error(self):
+    def test_given_slots_with_same_teacher_when_create_planning_then_raise_value_error(self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         slot1 = PlanningSlot(
@@ -356,10 +331,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         slot2 = PlanningSlot(
             id=PlanningSlotId(id="2"),
@@ -368,18 +343,16 @@ class TestPlanning:
             minutes_start=30,
             hours_end=10,
             minutes_end=30,
-            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="2"), name="Physics"),
-            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+            promotion=common_entities["promotion2"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course2"],
+            room=common_entities["room2"]
         )
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
             Planning(id=planning_id, slots=[slot1, slot2])
-        except ValueError as e:
-            assert 'Collision detected between slot 1 and slot 2' in str(e)
 
-    def test_given_slots_with_same_room_when_create_planning_then_raise_value_error(self):
+    def test_given_slots_with_same_room_when_create_planning_then_raise_value_error(self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         slot1 = PlanningSlot(
@@ -389,10 +362,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         slot2 = PlanningSlot(
             id=PlanningSlotId(id="2"),
@@ -401,18 +374,16 @@ class TestPlanning:
             minutes_start=30,
             hours_end=10,
             minutes_end=30,
-            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
-            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
-            course=Course(id=CourseId(id="2"), name="Physics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion2"],
+            teacher=common_entities["teacher2"],
+            course=common_entities["course2"],
+            room=common_entities["room1"]
         )
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
             Planning(id=planning_id, slots=[slot1, slot2])
-        except ValueError as e:
-            assert 'Collision detected between slot 1 and slot 2' in str(e)
 
-    def test_given_slots_with_same_promotion_when_create_planning_then_raise_value_error(self):
+    def test_given_slots_with_same_promotion_when_create_planning_then_raise_value_error(self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         slot1 = PlanningSlot(
@@ -422,10 +393,10 @@ class TestPlanning:
             minutes_start=0,
             hours_end=10,
             minutes_end=0,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
-            course=Course(id=CourseId(id="1"), name="Mathematics"),
-            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher1"],
+            course=common_entities["course1"],
+            room=common_entities["room1"]
         )
         slot2 = PlanningSlot(
             id=PlanningSlotId(id="2"),
@@ -434,13 +405,11 @@ class TestPlanning:
             minutes_start=30,
             hours_end=10,
             minutes_end=30,
-            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
-            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
-            course=Course(id=CourseId(id="2"), name="Physics"),
-            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+            promotion=common_entities["promotion1"],
+            teacher=common_entities["teacher2"],
+            course=common_entities["course2"],
+            room=common_entities["room2"]
         )
         # When/Then
-        try:
+        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
             Planning(id=planning_id, slots=[slot1, slot2])
-        except ValueError as e:
-            assert 'Collision detected between slot 1 and slot 2' in str(e)
