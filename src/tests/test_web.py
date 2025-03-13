@@ -13,7 +13,7 @@ API_PLANNING = f"{API_BASIS}/planning"
 class TestPromotionsEndpoint:
     """Test the promotions endpoint """
     def test_given_repository_when_get_promotions_then_get_200_and_promotions_list(self):
-        web.repository = PromotionRepositoryDumb()
+        web.repository_promotions = PromotionRepositoryDumb()
         client = TestClient(web.app)
         response = client.get(API_PROMOTIONS)
         assert response.status_code == status.HTTP_200_OK, response.text
@@ -24,7 +24,7 @@ class TestPromotionsEndpoint:
             web.Promotion(**promotion_json)
 
     def test_given_repository_when_get_promotions_raises_exception_then_get_500(self):
-        web.repository = PromotionRepositoryException()
+        web.repository_promotions = PromotionRepositoryException()
         client = TestClient(web.app)
         response = client.get(API_PROMOTIONS)
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR, response.text
@@ -33,7 +33,7 @@ class TestPromotionsEndpoint:
 class TestPlanningEndpoint:
     """Test the planning endpoint """
     def test_given_repository_when_get_planning_then_get_200_and_planning_ordered(self):
-        web.repository = PlanningRepositoryDumb()
+        web.repository_plannings = PlanningRepositoryDumb()
         client = TestClient(web.app)
         response = client.get(API_PLANNING)
         assert response.status_code == status.HTTP_200_OK, response.text
