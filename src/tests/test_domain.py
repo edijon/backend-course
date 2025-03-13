@@ -1,7 +1,7 @@
 from src.main.domain import (
     Promotion, PromotionId, Teacher, TeacherId, Course, CourseId, Room, RoomId,
-    PlanningSlot, PlanningSlotId
-)
+    PlanningSlot, PlanningSlotId, Planning, PlanningId)
+from datetime import date
 
 
 class TestPromotion:
@@ -65,6 +65,7 @@ class TestPlanningSlot:
     def test_given_valid_times_and_entities_when_create_planning_slot_then_return_planning_slot(self):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
+        date_start = "2021-09-01"
         hours_start = 9
         minutes_start = 0
         hours_end = 10
@@ -76,6 +77,7 @@ class TestPlanningSlot:
         # When
         planning_slot = PlanningSlot(
             id=planning_slot_id,
+            date_start=date_start,
             hours_start=hours_start,
             minutes_start=minutes_start,
             hours_end=hours_end,
@@ -86,6 +88,7 @@ class TestPlanningSlot:
             room=room
         )
         # Then
+        assert planning_slot.date_start == date.fromisoformat(date_start)
         assert planning_slot.hours_start == hours_start
         assert planning_slot.minutes_start == minutes_start
         assert planning_slot.hours_end == hours_end
@@ -98,6 +101,7 @@ class TestPlanningSlot:
     def test_given_invalid_end_time_when_create_planning_slot_then_raise_value_error(self):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
+        date_start = "2021-09-01"
         hours_start = 10
         minutes_start = 0
         hours_end = 9
@@ -110,6 +114,7 @@ class TestPlanningSlot:
         try:
             PlanningSlot(
                 id=planning_slot_id,
+                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -125,6 +130,7 @@ class TestPlanningSlot:
     def test_given_invalid_duration_when_create_planning_slot_then_raise_value_error(self):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
+        date_start = "2021-09-01"
         hours_start = 9
         minutes_start = 0
         hours_end = 9
@@ -137,6 +143,7 @@ class TestPlanningSlot:
         try:
             PlanningSlot(
                 id=planning_slot_id,
+                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -152,6 +159,7 @@ class TestPlanningSlot:
     def test_given_duration_exceeds_four_hours_when_create_planning_slot_then_raise_value_error(self):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
+        date_start = "2021-09-01"
         hours_start = 9
         minutes_start = 0
         hours_end = 13
@@ -164,6 +172,7 @@ class TestPlanningSlot:
         try:
             PlanningSlot(
                 id=planning_slot_id,
+                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -179,6 +188,7 @@ class TestPlanningSlot:
     def test_given_invalid_start_time_when_create_planning_slot_then_raise_value_error(self):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
+        date_start = "2021-09-01"
         hours_start = 8
         minutes_start = 0
         hours_end = 9
@@ -191,6 +201,7 @@ class TestPlanningSlot:
         try:
             PlanningSlot(
                 id=planning_slot_id,
+                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -206,6 +217,7 @@ class TestPlanningSlot:
     def test_given_invalid_end_time_limit_when_create_planning_slot_then_raise_value_error(self):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
+        date_start = "2021-09-01"
         hours_start = 16
         minutes_start = 0
         hours_end = 17
@@ -218,6 +230,7 @@ class TestPlanningSlot:
         try:
             PlanningSlot(
                 id=planning_slot_id,
+                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -229,3 +242,205 @@ class TestPlanningSlot:
             )
         except ValueError as e:
             assert 'Last slot can only end at 17:15 or earlier' in str(e)
+
+class TestPlanning:
+    """Test cases for Planning class."""
+class TestPlanning:
+    """Test cases for Planning class."""
+    def test_given_valid_slots_when_create_planning_then_return_planning(self):
+        # Given
+        planning_id = PlanningId(id="1")
+        slot1 = PlanningSlot(
+            id=PlanningSlotId(id="1"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        slot2 = PlanningSlot(
+            id=PlanningSlotId(id="2"),
+            date_start="2021-09-01",
+            hours_start=10,
+            minutes_start=15,
+            hours_end=11,
+            minutes_end=15,
+            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
+            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
+            course=Course(id=CourseId(id="2"), name="Physics"),
+            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+        )
+        # When
+        planning = Planning(id=planning_id, slots=[slot1, slot2])
+        # Then
+        assert planning.id == planning_id
+        assert len(planning.slots) == 2
+
+    def test_given_colliding_slots_when_create_planning_then_raise_value_error(self):
+        # Given
+        planning_id = PlanningId(id="1")
+        slot1 = PlanningSlot(
+            id=PlanningSlotId(id="1"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        slot2 = PlanningSlot(
+            id=PlanningSlotId(id="2"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=30,
+            hours_end=10,
+            minutes_end=30,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        # When/Then
+        try:
+            Planning(id=planning_id, slots=[slot1, slot2])
+        except ValueError as e:
+            assert 'Collision detected between slot 1 and slot 2' in str(e)
+
+    def test_given_valid_slots_with_different_promotions_teachers_rooms_when_create_planning_then_return_planning(self):
+        # Given
+        planning_id = PlanningId(id="1")
+        slot1 = PlanningSlot(
+            id=PlanningSlotId(id="1"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        slot2 = PlanningSlot(
+            id=PlanningSlotId(id="2"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
+            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
+            course=Course(id=CourseId(id="2"), name="Physics"),
+            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+        )
+        # When
+        planning = Planning(id=planning_id, slots=[slot1, slot2])
+        # Then
+        assert planning.id == planning_id
+        assert len(planning.slots) == 2
+
+    def test_given_slots_with_same_teacher_when_create_planning_then_raise_value_error(self):
+        # Given
+        planning_id = PlanningId(id="1")
+        slot1 = PlanningSlot(
+            id=PlanningSlotId(id="1"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        slot2 = PlanningSlot(
+            id=PlanningSlotId(id="2"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=30,
+            hours_end=10,
+            minutes_end=30,
+            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="2"), name="Physics"),
+            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+        )
+        # When/Then
+        try:
+            Planning(id=planning_id, slots=[slot1, slot2])
+        except ValueError as e:
+            assert 'Collision detected between slot 1 and slot 2' in str(e)
+
+    def test_given_slots_with_same_room_when_create_planning_then_raise_value_error(self):
+        # Given
+        planning_id = PlanningId(id="1")
+        slot1 = PlanningSlot(
+            id=PlanningSlotId(id="1"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        slot2 = PlanningSlot(
+            id=PlanningSlotId(id="2"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=30,
+            hours_end=10,
+            minutes_end=30,
+            promotion=Promotion(id=PromotionId(id="2"), study_year=3, diploma="DEUST", name="Smith"),
+            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
+            course=Course(id=CourseId(id="2"), name="Physics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        # When/Then
+        try:
+            Planning(id=planning_id, slots=[slot1, slot2])
+        except ValueError as e:
+            assert 'Collision detected between slot 1 and slot 2' in str(e)
+
+    def test_given_slots_with_same_promotion_when_create_planning_then_raise_value_error(self):
+        # Given
+        planning_id = PlanningId(id="1")
+        slot1 = PlanningSlot(
+            id=PlanningSlotId(id="1"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=0,
+            hours_end=10,
+            minutes_end=0,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="1"), name="Doe", firstname="John"),
+            course=Course(id=CourseId(id="1"), name="Mathematics"),
+            room=Room(id=RoomId(id="1"), name="Room 101", description="First floor room")
+        )
+        slot2 = PlanningSlot(
+            id=PlanningSlotId(id="2"),
+            date_start="2021-09-01",
+            hours_start=9,
+            minutes_start=30,
+            hours_end=10,
+            minutes_end=30,
+            promotion=Promotion(id=PromotionId(id="1"), study_year=2, diploma="DEUST", name="Kempf"),
+            teacher=Teacher(id=TeacherId(id="2"), name="Brown", firstname="Alice"),
+            course=Course(id=CourseId(id="2"), name="Physics"),
+            room=Room(id=RoomId(id="2"), name="Room 102", description="Second floor room")
+        )
+        # When/Then
+        try:
+            Planning(id=planning_id, slots=[slot1, slot2])
+        except ValueError as e:
+            assert 'Collision detected between slot 1 and slot 2' in str(e)

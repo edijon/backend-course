@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel, ConfigDict
 from typing import List
 from pydantic import Field, model_validator
-from datetime import time, timedelta
+from datetime import time, timedelta, date
 
 
 class BaseIdentifier(BaseModel):
@@ -111,6 +111,7 @@ class PlanningSlot(BaseModel):
     PlanningSlot is an aggregate root entity that holds the details of a planning slot.
     Attributes:
         id (PlanningSlotId): Unique identifier for the planning slot.
+        date_start(date): Date of the planning slot.
         hours_start (int): Starting hour of the planning slot (must be between 8 and 17 inclusive).
         minutes_start (int): Starting minute of the planning slot (must be between 0 and 59 inclusive).
         hours_end (int): Ending hour of the planning slot (must be between 8 and 17 inclusive).
@@ -128,6 +129,7 @@ class PlanningSlot(BaseModel):
         The Field(..., ge=8, le=17) and similar constraints are used to enforce that the values are within the specified range.
     """
     id: PlanningSlotId
+    date_start: date
     hours_start: int = Field(..., ge=8, le=17)
     minutes_start: int = Field(..., ge=0, le=59)
     hours_end: int = Field(..., ge=8, le=17)
@@ -165,4 +167,51 @@ class IPlanningSlotRepository(ABC):
 
     @abstractmethod
     def find_all(self) -> List[PlanningSlot]:
+        raise NotImplementedError
+
+
+class PlanningId(BaseIdentifier):
+    """Value object holding Planning identity."""
+
+
+class Planning(BaseModel):
+    """
+    Aggregate root, entity holding planning.
+    Attributes:
+        id (PlanningId): Unique identifier for the planning.
+        slots (List[PlanningSlot]): List of planning slots.
+    Validators:
+        check_no_collisions: Ensures that there are no collisions between slots.
+    """
+    id: PlanningId
+    slots: List[PlanningSlot]
+
+    @model_validator(mode="after")
+    def check_no_collisions(self):
+        for i, slot1 in enumerate(self.slots):
+            # This loop iterates over each slot in self.slots. 
+            # The enumerate function provides both the index (i) and the slot (slot1).
+            for j, slot2 in enumerate(self.slots):
+                if i != j and self._slots_collide(slot1, slot2):
+                    raise ValueError(f"Collision detected between slot {i+1} and slot {j+1}")
+        return self
+
+    def _slots_collide(self, slot1: PlanningSlot, slot2: PlanningSlot) -> bool:
+        if slot1.promotion == slot2.promotion or slot1.teacher == slot2.teacher or slot1.room == slot2.room:
+            start1 = time(slot1.hours_start, slot1.minutes_start)
+            end1 = time(slot1.hours_end, slot1.minutes_end)
+            start2 = time(slot2.hours_start, slot2.minutes_start)
+            end2 = time(slot2.hours_end, slot2.minutes_end)
+            return start1 < end2 and start2 < end1
+        return False
+
+
+class IPlanningRepository(ABC):
+    """Interface for handling plannings persistence."""
+    @abstractmethod
+    def next_identity(self) -> PlanningId:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_all(self) -> List[Planning]:
         raise NotImplementedError
