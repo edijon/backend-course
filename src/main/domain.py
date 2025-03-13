@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import List
 from pydantic import Field, model_validator
 from datetime import time, timedelta, date
+import uuid
 
 
 class BaseIdentifier(BaseModel):
@@ -12,6 +13,12 @@ class BaseIdentifier(BaseModel):
 
     def __str__(self):
         return self.id
+
+
+class BaseRepository:
+    """Base repository with common functionality."""
+    def next_identity(self):
+        return str(uuid.uuid4())
 
 
 class PromotionId(BaseIdentifier):
@@ -36,6 +43,10 @@ class IPromotionRepository(ABC):
     def find_all(self) -> List[Promotion]:
         raise NotImplementedError
 
+    @abstractmethod
+    def find_by_id(self, id: PromotionId) -> Promotion:
+        raise NotImplementedError
+
 
 class TeacherId(BaseIdentifier):
     """Value object holding Teacher identity."""
@@ -58,6 +69,10 @@ class ITeacherRepository(ABC):
     def find_all(self) -> List[Teacher]:
         raise NotImplementedError
 
+    @abstractmethod
+    def find_by_id(self, id: TeacherId) -> Teacher:
+        raise NotImplementedError
+
 
 class CourseId(BaseIdentifier):
     """Value object holding Course identity."""
@@ -77,6 +92,10 @@ class ICourseRepository(ABC):
 
     @abstractmethod
     def find_all(self) -> List[Course]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_by_id(self, id: CourseId) -> Course:
         raise NotImplementedError
 
 
@@ -101,6 +120,10 @@ class IRoomRepository(ABC):
     def find_all(self) -> List[Room]:
         raise NotImplementedError
 
+    @abstractmethod
+    def find_by_id(self, id: RoomId) -> Room:
+        raise NotImplementedError
+
 
 class PlanningSlotId(BaseIdentifier):
     """Value object holding PlanningSlot identity."""
@@ -116,10 +139,10 @@ class PlanningSlot(BaseModel):
         minutes_start (int): Starting minute of the planning slot (must be between 0 and 59 inclusive).
         hours_end (int): Ending hour of the planning slot (must be between 8 and 17 inclusive).
         minutes_end (int): Ending minute of the planning slot (must be between 0 and 59 inclusive).
-        promotion (Promotion): Promotion associated with the planning slot.
-        teacher (Teacher): Teacher assigned to the planning slot.
-        course (Course): Course associated with the planning slot.
-        room (Room): Room where the planning slot will take place.
+        promotion_id (PromotionId): ID of the promotion associated with the planning slot.
+        teacher_id (TeacherId): ID of the teacher assigned to the planning slot.
+        course_id (CourseId): ID of the course associated with the planning slot.
+        room_id (RoomId): ID of the room where the planning slot will take place.
     Validators:
         check_end_time: Ensures that the end time is after the start time.
         check_duration: Ensures that the duration of the slot is at least 30 minutes and at most 4 hours.
@@ -134,10 +157,10 @@ class PlanningSlot(BaseModel):
     minutes_start: int = Field(..., ge=0, le=59)
     hours_end: int = Field(..., ge=8, le=17)
     minutes_end: int = Field(..., ge=0, le=59)
-    promotion: Promotion
-    teacher: Teacher
-    course: Course
-    room: Room
+    promotion_id: PromotionId
+    teacher_id: TeacherId
+    course_id: CourseId
+    room_id: RoomId
 
     @model_validator(mode="after")
     def check_times(self):
@@ -189,15 +212,13 @@ class Planning(BaseModel):
     @model_validator(mode="after")
     def check_no_collisions(self):
         for i, slot1 in enumerate(self.slots):
-            # This loop iterates over each slot in self.slots.
-            # The enumerate function provides both the index (i) and the slot (slot1).
             for j, slot2 in enumerate(self.slots):
                 if i != j and self._slots_collide(slot1, slot2):
                     raise ValueError(f"Collision detected between slot {i+1} and slot {j+1}")
         return self
 
     def _slots_collide(self, slot1: PlanningSlot, slot2: PlanningSlot) -> bool:
-        if slot1.promotion == slot2.promotion or slot1.teacher == slot2.teacher or slot1.room == slot2.room:
+        if slot1.promotion_id == slot2.promotion_id or slot1.teacher_id == slot2.teacher_id or slot1.room_id == slot2.room_id:
             start1 = time(slot1.hours_start, slot1.minutes_start)
             end1 = time(slot1.hours_end, slot1.minutes_end)
             start2 = time(slot2.hours_start, slot2.minutes_start)
@@ -214,4 +235,8 @@ class IPlanningRepository(ABC):
 
     @abstractmethod
     def find_all(self) -> List[Planning]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_by_id(self, id: PlanningId) -> Planning:
         raise NotImplementedError
