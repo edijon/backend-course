@@ -202,11 +202,15 @@ class Planning(BaseModel):
     Aggregate root, entity holding planning.
     Attributes:
         id (PlanningId): Unique identifier for the planning.
+        date (date): Date of the planning.
+        promotion_id (PromotionId): ID of the promotion associated with the planning.
         slots (List[PlanningSlot]): List of planning slots.
     Validators:
         check_no_collisions: Ensures that there are no collisions between slots.
     """
     id: PlanningId
+    date: date
+    promotion_id: PromotionId
     slots: List[PlanningSlot]
 
     @model_validator(mode="after")
@@ -239,4 +243,8 @@ class IPlanningRepository(ABC):
 
     @abstractmethod
     def find_by_id(self, id: PlanningId) -> Planning:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_by_date_and_promotion(self, date: date, promotion_id: PromotionId) -> List[Planning]:
         raise NotImplementedError

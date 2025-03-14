@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import List
+from datetime import date as dt
 from src.main import domain
 
 
@@ -91,6 +92,8 @@ class PlanningSlot(BaseModel):
 
 class Planning(BaseModel):
     id: str
+    date: str
+    promotion: Promotion
     slots: List[PlanningSlot]
 
 
@@ -124,10 +127,13 @@ async def add_promotion(promotion: Promotion, user: dict = Depends(get_current_u
 
 # Endpoint to get all planning
 @app.get("/api/v1/planning", response_model=List[Planning])
-async def get_planning() -> List[Planning]:
+async def get_planning(date: str = None, promotion_id: str = None) -> List[Planning]:
     global repository_plannings
     try:
-        planning_entities = repository_plannings.find_all()
+        if date and promotion_id:
+            planning_entities = repository_plannings.find_by_date_and_promotion(dt.fromisoformat(date), domain.PromotionId(id=promotion_id))
+        else:
+            planning_entities = repository_plannings.find_all()
         plannings = [await get_planning_from_entity(entity) for entity in planning_entities]
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
@@ -160,8 +166,9 @@ async def get_room_from_entity(entity: domain.Room) -> Room:
 
 
 async def get_planning_from_entity(entity: domain.Planning) -> Planning:
+    promotion = await get_promotion_from_entity(repository_promotions.find_by_id(entity.promotion_id))
     slots = [await get_planning_slot_from_entity(slot) for slot in entity.slots]
-    return Planning(id=str(entity.id), slots=slots)
+    return Planning(id=str(entity.id), date=str(entity.date), promotion=promotion, slots=slots)
 
 
 async def get_planning_slot_from_entity(entity: domain.PlanningSlot) -> PlanningSlot:

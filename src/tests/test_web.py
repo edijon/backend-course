@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from fastapi import status
+from typing import List
 from .test_persistence import (
     PromotionRepositoryDumb, PromotionRepositoryException, PlanningRepositoryDumb,
     TeacherRepositoryDumb, CourseRepositoryDumb, RoomRepositoryDumb)
@@ -93,6 +94,13 @@ class TestPlanningEndpoint:
         token = get_auth_token()
         planning_data = {
             "id": "1",
+            "date": "2021-09-01",
+            "promotion": {
+                "id": "1",
+                "study_year": 2,
+                "diploma": "DEUST",
+                "name": "Kempf"
+            },
             "slots": [
                 {
                     "id": "1",
@@ -103,7 +111,7 @@ class TestPlanningEndpoint:
                     "minutes_end": 0,
                     "promotion": {
                         "id": "1",
-                        "study_year": 2,  # Provide study_year as an integer
+                        "study_year": 2,
                         "diploma": "DEUST",
                         "name": "Kempf"
                     },
@@ -131,6 +139,13 @@ class TestPlanningEndpoint:
     def test_given_invalid_token_when_add_planning_then_get_401(self):
         planning_data = {
             "id": "1",
+            "date": "2021-09-01",
+            "promotion": {
+                "id": "1",
+                "study_year": 2,
+                "diploma": "DEUST",
+                "name": "Kempf"
+            },
             "slots": [
                 {
                     "id": "1",
@@ -164,6 +179,23 @@ class TestPlanningEndpoint:
         }
         response = self.client.post(API_PLANNING, json=planning_data, headers={"Authorization": "Bearer invalid-token"})
         assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
+
+    def test_given_date_and_promotion_id_when_get_planning_then_get_200_and_filtered_planning(self):
+        web.repository_plannings = PlanningRepositoryDumb()
+        web.repository_promotions = PromotionRepositoryDumb()  # Ensure correct repository is used
+        web.repository_teachers = TeacherRepositoryDumb()  # Ensure correct repository is used
+        web.repository_courses = CourseRepositoryDumb()  # Ensure correct repository is used
+        web.repository_rooms = RoomRepositoryDumb()  # Ensure correct repository is used
+        date = "2021-09-01"
+        promotion_id = "1"
+        response = self.client.get(f"{API_PLANNING}?date={date}&promotion_id={promotion_id}")
+        assert_response_status(response, status.HTTP_200_OK)
+        planning_json = response.json()
+        assert isinstance(planning_json, list)
+        assert len(planning_json) >= 1
+        for planning in planning_json:
+            assert planning["date"] == date
+            assert planning["promotion"]["id"] == promotion_id
 
     def _assert_planning_ordered(self, planning_json):
         previous_date = None

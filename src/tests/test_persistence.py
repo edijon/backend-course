@@ -1,5 +1,6 @@
 import src.main.domain as domain
 from datetime import date
+from typing import List
 
 
 class PromotionRepositoryDumb(domain.BaseRepository, domain.IPromotionRepository):
@@ -88,6 +89,8 @@ class PlanningRepositoryDumb(domain.BaseRepository, domain.IPlanningRepository):
         self.plannings = [
             domain.Planning(
                 id=domain.PlanningId(id="1"),
+                date=date(2021, 9, 1),
+                promotion_id=domain.PromotionId(id="1"),
                 slots=self._create_slots()
             )
         ]
@@ -128,3 +131,6 @@ class PlanningRepositoryDumb(domain.BaseRepository, domain.IPlanningRepository):
             if planning.id == id:
                 return planning
         raise ValueError("Planning not found")
+
+    def find_by_date_and_promotion(self, date: date, promotion_id: domain.PromotionId) -> List[domain.Planning]:
+        return [planning for planning in self.plannings if planning.date == date and planning.promotion_id == promotion_id]
