@@ -12,9 +12,7 @@ import uuid
 
 class PlanningSlot(SQLModel, table=True):
     __tablename__ = "planning_slots"
-    __table_args__ = {"extend_existing": True}
-    id: str = Field(primary_key=True)
-    date_start: date
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     hours_start: int
     minutes_start: int
     hours_end: int
@@ -29,19 +27,15 @@ class PlanningSlot(SQLModel, table=True):
 
 class Planning(SQLModel, table=True):
     __tablename__ = "plannings"
-    __table_args__ = {"extend_existing": True}
     id: str = Field(primary_key=True)
     date: date
     promotion_id: str = Field(foreign_key="promotions.id")
-    slots: List[PlanningSlot] = Relationship(back_populates="planning")
+    slots: List[PlanningSlot] = Relationship(back_populates="planning", cascade_delete=True)
 
 
 class PlanningRepository(BaseRepository, IPlanningRepository):
     def __init__(self, session: Session):
         self.session = session
-
-    def next_identity(self) -> PlanningId:
-        return PlanningId(id=str(uuid.uuid4()))
 
     def find_all(self) -> List[DomainPlanning]:
         statement = select(Planning)
@@ -49,7 +43,7 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
         return [self._to_domain(planning) for planning in results.all()]
 
     def find_by_id(self, id: PlanningId) -> DomainPlanning:
-        statement = select(Planning).where(Planning.id == id.id)
+        statement = select(Planning).where(Planning.id == str(id))
         result = self.session.exec(statement).first()
         if not result:
             raise ValueError("Planning not found")
@@ -60,34 +54,56 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
         results = self.session.exec(statement)
         return [self._to_domain(planning) for planning in results.all()]
 
-    def find_all_slots(self) -> List[DomainPlanningSlot]:
-        statement = select(PlanningSlot)
-        results = self.session.exec(statement)
-        return [self._to_domain_slot(slot) for slot in results.all()]
-
     def add(self, planning: DomainPlanning) -> None:
+        planning_id = str(planning.id)
         db_planning = Planning(
-            id=planning.id.id,
+            id=planning_id,
             date=planning.date,
-            promotion_id=planning.promotion_id.id,
-            slots=[self._to_db_slot(slot) for slot in planning.slots]
+            promotion_id=str(planning.promotion_id),
+            slots=[self._to_db_slot(slot, planning_id) for slot in planning.slots]
         )
         self.session.add(db_planning)
         self.session.commit()
 
     def update(self, planning: DomainPlanning) -> None:
-        db_planning = Planning(
-            id=planning.id.id,
-            date=planning.date,
-            promotion_id=planning.promotion_id.id,
-            slots=[self._to_db_slot(slot) for slot in planning.slots]
-        )
-        self.session.merge(db_planning)
+        planning_id = str(planning.id)
+        db_planning = self.session.get(Planning, planning_id)
+        if not db_planning:
+            raise ValueError("Planning not found")
+        db_planning.date = planning.date
+        db_planning.promotion_id = str(planning.promotion_id)
+
+        # Update existing slots and add new ones if necessary
+        existing_slot_ids = {slot.id for slot in db_planning.slots}
+        new_slot_ids = {slot.id for slot in planning.slots}
+
+        # Delete slots that are no longer present
+        for slot in db_planning.slots:
+            if slot.id not in new_slot_ids:
+                self.session.delete(slot)
+
+        # Update or add slots
+        for slot in planning.slots:
+            if slot.id in existing_slot_ids:
+                db_slot = self.session.get(PlanningSlot, slot.id)
+                db_slot.hours_start = slot.hours_start
+                db_slot.minutes_start = slot.minutes_start
+                db_slot.hours_end = slot.hours_end
+                db_slot.minutes_end = slot.minutes_end
+                db_slot.teacher_id = str(slot.teacher_id)
+                db_slot.course_id = str(slot.course_id)
+                db_slot.room_id = str(slot.room_id)
+            else:
+                db_slot = self._to_db_slot(slot, planning_id)
+                self.session.add(db_slot)
+
         self.session.commit()
 
-    def delete(self, id: PlanningId) -> None:
-        planning = self.find_by_id(id)
-        db_planning = self.session.get(Planning, id.id)
+    def delete(self, planning: DomainPlanning) -> None:
+        planning_id = str(planning.id)
+        db_planning = self.session.get(Planning, planning_id)
+        if not db_planning:
+            raise ValueError("Planning not found")
         self.session.delete(db_planning)
         self.session.commit()
 
@@ -102,7 +118,6 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
     def _to_domain_slot(self, slot: PlanningSlot) -> DomainPlanningSlot:
         return DomainPlanningSlot(
             id=PlanningSlotId(id=slot.id),
-            date_start=slot.date_start,
             hours_start=slot.hours_start,
             minutes_start=slot.minutes_start,
             hours_end=slot.hours_end,
@@ -110,21 +125,53 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
             promotion_id=PromotionId(id=slot.promotion_id),
             teacher_id=TeacherId(id=slot.teacher_id),
             course_id=CourseId(id=slot.course_id),
-            room_id=RoomId(id=slot.room_id),
-            planning_id=PlanningId(id=slot.planning_id)
+            room_id=RoomId(id=slot.room_id)
         )
 
-    def _to_db_slot(self, slot: DomainPlanningSlot) -> PlanningSlot:
+    def _to_db_slot(self, slot: DomainPlanningSlot, planning_id: str) -> PlanningSlot:
         return PlanningSlot(
-            id=slot.id.id,
-            date_start=slot.date_start,
+            id=str(slot.id),
             hours_start=slot.hours_start,
             minutes_start=slot.minutes_start,
             hours_end=slot.hours_end,
             minutes_end=slot.minutes_end,
-            promotion_id=slot.promotion_id.id,
-            teacher_id=slot.teacher_id.id,
-            course_id=slot.course_id.id,
-            room_id=slot.room_id.id,
-            planning_id=slot.planning_id.id
+            promotion_id=str(slot.promotion_id),
+            teacher_id=str(slot.teacher_id),
+            course_id=str(slot.course_id),
+            room_id=str(slot.room_id),
+            planning_id=planning_id
         )
+
+    def find_slot_by_id(self, planning_id: PlanningId, slot_id: PlanningSlotId) -> DomainPlanningSlot:
+        statement = select(PlanningSlot).where(PlanningSlot.id == slot_id.id, PlanningSlot.planning_id == planning_id.id)
+        result = self.session.exec(statement).first()
+        if not result:
+            raise ValueError("Planning slot not found")
+        return self._to_domain_slot(result)
+
+    def add_slot(self, planning_id: PlanningId, slot: DomainPlanningSlot) -> None:
+        db_slot = self._to_db_slot(slot)
+        db_slot.planning_id = planning_id.id
+        self.session.add(db_slot)
+        self.session.commit()
+
+    def update_slot(self, planning_id: PlanningId, slot: DomainPlanningSlot) -> None:
+        db_slot = self.session.get(PlanningSlot, slot.id.id)
+        if not db_slot or db_slot.planning_id != planning_id.id:
+            raise ValueError("Planning slot not found")
+        db_slot.hours_start = slot.hours_start
+        db_slot.minutes_start = slot.minutes_start
+        db_slot.hours_end = slot.hours_end
+        db_slot.minutes_end = slot.minutes_end
+        db_slot.teacher_id = slot.teacher_id.id
+        db_slot.course_id = slot.course_id.id
+        db_slot.room_id = slot.room_id.id
+        self.session.add(db_slot)
+        self.session.commit()
+
+    def delete_slot(self, planning_id: PlanningId, slot_id: PlanningSlotId) -> None:
+        db_slot = self.session.get(PlanningSlot, slot_id.id)
+        if not db_slot or db_slot.planning_id != planning_id.id:
+            raise ValueError("Planning slot not found")
+        self.session.delete(db_slot)
+        self.session.commit()

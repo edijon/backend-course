@@ -15,9 +15,9 @@ class PromotionRepositoryDumb(BaseRepository, IPromotionRepository):
     def find_all(self):
         return self.promotions
 
-    def find_by_id(self, id: PromotionId):
+    def find_by_id(self, promotion_id: PromotionId):
         for promotion in self.promotions:
-            if promotion.id == id:
+            if str(promotion.id) == str(promotion_id):
                 return promotion
         raise ValueError("Promotion not found")
 

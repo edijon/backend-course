@@ -8,16 +8,18 @@ from .teacher import TeacherId
 from .course import CourseId
 from .room import RoomId
 
+
 class PlanningSlotId(BaseIdentifier):
     """Value object holding PlanningSlot identity."""
     pass
 
+
 class PlanningSlot(BaseModel):
     """
-    PlanningSlot is an aggregate root entity that holds the details of a planning slot.
+    PlanningSlot is an entity that holds the details of a planning slot.
+    Note: This entity is part of the Planning aggregate and should only be managed via a Planning.
     Attributes:
         id (PlanningSlotId): Unique identifier for the planning slot.
-        date_start (date): Date of the planning slot.
         hours_start (int): Starting hour of the planning slot (must be between 8 and 17 inclusive).
         minutes_start (int): Starting minute of the planning slot (must be between 0 and 59 inclusive).
         hours_end (int): Ending hour of the planning slot (must be between 8 and 17 inclusive).
@@ -29,11 +31,8 @@ class PlanningSlot(BaseModel):
     Validators:
         check_times: Ensures that the end time is after the start time, the duration is between 30 minutes and 4 hours,
                       the first slot starts at 08:15 or later, and the last slot ends at 17:15 or earlier.
-    Note:
-        Les contraintes Field(..., ge=8, le=17) et similaires servent à imposer les bornes des valeurs.
     """
     id: PlanningSlotId
-    date_start: date
     hours_start: int = Field(..., ge=8, le=17)
     minutes_start: int = Field(..., ge=0, le=59)
     hours_end: int = Field(..., ge=8, le=17)
@@ -60,23 +59,17 @@ class PlanningSlot(BaseModel):
             raise ValueError("Last slot can only end at 17:15 or earlier")
         return self
 
-class IPlanningSlotRepository(ABC):
-    """Interface for handling planning slots persistence."""
-    @abstractmethod
-    def next_identity(self) -> PlanningSlotId:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_all(self) -> List[PlanningSlot]:
-        raise NotImplementedError
 
 class PlanningId(BaseIdentifier):
     """Value object holding Planning identity."""
     pass
 
+
 class Planning(BaseModel):
     """
     Aggregate root, entity holding planning.
+    Un Planning encapsule une liste de PlanningSlot. Pour respecter le DDD, un PlanningSlot ne peut être
+    manipulé que via cet agrégat.
     Attributes:
         id (PlanningId): Unique identifier for the planning.
         date (date): Date of the planning.
@@ -99,6 +92,7 @@ class Planning(BaseModel):
         return self
 
     def _slots_collide(self, slot1: PlanningSlot, slot2: PlanningSlot) -> bool:
+        # Les collisions se produisent si deux slots d'une même promotion, du même enseignant ou dans la même salle se chevauchent.
         if slot1.promotion_id == slot2.promotion_id or slot1.teacher_id == slot2.teacher_id or slot1.room_id == slot2.room_id:
             start1 = time(slot1.hours_start, slot1.minutes_start)
             end1 = time(slot1.hours_end, slot1.minutes_end)
@@ -106,6 +100,42 @@ class Planning(BaseModel):
             end2 = time(slot2.hours_end, slot2.minutes_end)
             return start1 < end2 and start2 < end1
         return False
+
+    def add_slot(self, slot: PlanningSlot) -> None:
+        """
+        Ajoute un nouveau slot au planning en vérifiant qu'il n'entre pas en collision avec les slots existants.
+        """
+        for existing in self.slots:
+            if self._slots_collide(existing, slot):
+                raise ValueError("Collision detected with an existing slot")
+        self.slots.append(slot)
+        self.check_no_collisions()
+
+    def remove_slot(self, slot_id: PlanningSlotId) -> None:
+        """
+        Supprime un slot du planning à partir de son identifiant.
+        """
+        self.slots = [slot for slot in self.slots if slot.id != slot_id]
+        self.check_no_collisions()
+
+    def update_slot(self, updated_slot: PlanningSlot) -> None:
+        """
+        Met à jour un slot existant dans le planning.
+        """
+        found = False
+        new_slots = []
+        for slot in self.slots:
+            if slot.id == updated_slot.id:
+                new_slots.append(updated_slot)
+                found = True
+            else:
+                new_slots.append(slot)
+        if not found:
+            raise ValueError("Slot not found")
+        # Vérifie que la mise à jour ne génère pas de collision
+        temp = self.model_copy(update={"slots": new_slots})
+        temp.check_no_collisions()
+        self.slots = new_slots
 
 class IPlanningRepository(ABC):
     """Interface for handling plannings persistence."""

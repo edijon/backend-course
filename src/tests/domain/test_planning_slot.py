@@ -7,8 +7,9 @@ from datetime import date
 import pytest
 
 class TestPlanningSlot:
-    """Test cases for PlanningSlot class."""
-    
+    """Test cases for PlanningSlot class. Même si dans le DDD, un PlanningSlot est manipulé via Planning,
+    ces tests vérifient les invariants de l’entité lors de sa création."""
+
     @pytest.fixture
     def common_entities(self):
         return {
@@ -21,7 +22,6 @@ class TestPlanningSlot:
     def test_given_valid_times_and_entities_when_create_planning_slot_then_return_planning_slot(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
-        date_start = date(2021, 9, 1)
         hours_start = 9
         minutes_start = 0
         hours_end = 10
@@ -29,7 +29,6 @@ class TestPlanningSlot:
         # When
         planning_slot = PlanningSlot(
             id=planning_slot_id,
-            date_start=date_start,
             hours_start=hours_start,
             minutes_start=minutes_start,
             hours_end=hours_end,
@@ -37,7 +36,6 @@ class TestPlanningSlot:
             **common_entities
         )
         # Then
-        assert planning_slot.date_start == date_start
         assert planning_slot.hours_start == hours_start
         assert planning_slot.minutes_start == minutes_start
         assert planning_slot.hours_end == hours_end
@@ -50,7 +48,6 @@ class TestPlanningSlot:
     def test_given_invalid_end_time_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
-        date_start = date(2021, 9, 1)
         hours_start = 10
         minutes_start = 0
         hours_end = 9
@@ -59,7 +56,6 @@ class TestPlanningSlot:
         with pytest.raises(ValueError, match='End time must be after start time'):
             PlanningSlot(
                 id=planning_slot_id,
-                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -70,7 +66,6 @@ class TestPlanningSlot:
     def test_given_invalid_duration_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
-        date_start = date(2021, 9, 1)
         hours_start = 9
         minutes_start = 0
         hours_end = 9
@@ -79,7 +74,6 @@ class TestPlanningSlot:
         with pytest.raises(ValueError, match='Slot duration must be at least 30 minutes'):
             PlanningSlot(
                 id=planning_slot_id,
-                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -90,7 +84,6 @@ class TestPlanningSlot:
     def test_given_duration_exceeds_four_hours_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
-        date_start = date(2021, 9, 1)
         hours_start = 9
         minutes_start = 0
         hours_end = 13
@@ -99,7 +92,6 @@ class TestPlanningSlot:
         with pytest.raises(ValueError, match='Slot duration must be at most 4 hours'):
             PlanningSlot(
                 id=planning_slot_id,
-                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -110,7 +102,6 @@ class TestPlanningSlot:
     def test_given_invalid_start_time_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
-        date_start = date(2021, 9, 1)
         hours_start = 8
         minutes_start = 0
         hours_end = 9
@@ -119,7 +110,6 @@ class TestPlanningSlot:
         with pytest.raises(ValueError, match='First slot can only start at 08:15 or later'):
             PlanningSlot(
                 id=planning_slot_id,
-                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,
@@ -130,7 +120,6 @@ class TestPlanningSlot:
     def test_given_invalid_end_time_limit_when_create_planning_slot_then_raise_value_error(self, common_entities):
         # Given
         planning_slot_id = PlanningSlotId(id="1")
-        date_start = date(2021, 9, 1)
         hours_start = 16
         minutes_start = 0
         hours_end = 17
@@ -139,7 +128,6 @@ class TestPlanningSlot:
         with pytest.raises(ValueError, match='Last slot can only end at 17:15 or earlier'):
             PlanningSlot(
                 id=planning_slot_id,
-                date_start=date_start,
                 hours_start=hours_start,
                 minutes_start=minutes_start,
                 hours_end=hours_end,

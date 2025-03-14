@@ -18,7 +18,7 @@ class RoomRepositoryDumb(BaseRepository, IRoomRepository):
 
     def find_by_id(self, id: RoomId):
         for room in self.rooms:
-            if room.id == id:
+            if str(room.id) == str(id):
                 return room
         raise ValueError("Room not found")
 

@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from fastapi import status
-from src.tests.persistence import CourseRepositoryDumb, CourseRepositoryException
+from src.tests.persistence.test_course import CourseRepositoryDumb, CourseRepositoryException
 from src.main.web.main import app
 from src.main.web.courses import Course
 

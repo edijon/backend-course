@@ -7,8 +7,8 @@ from datetime import date
 import pytest
 
 class TestPlanning:
-    """Test cases for Planning class."""
-    
+    """Test cases for Planning aggregate and its slot management methods."""
+
     @pytest.fixture
     def common_entities(self):
         return {
@@ -22,35 +22,33 @@ class TestPlanning:
             "room2": RoomId(id="2")
         }
 
-    def test_given_valid_slots_when_create_planning_then_return_planning(self, common_entities):
+    @pytest.fixture
+    def empty_planning(self, common_entities):
+        # Création d'un planning sans slots
+        planning_id = PlanningId(id="1")
+        return Planning(id=planning_id, date=date(2021, 9, 1), promotion_id=common_entities["promotion1"], slots=[])
+
+    def create_slot(self, slot_id: str, start_hour: int, start_min: int, end_hour: int, end_min: int, common_entities, 
+                    promo_key="promotion1", teacher_key="teacher1", course_key="course1", room_key="room1"):
+        return PlanningSlot(
+            id=PlanningSlotId(id=slot_id),
+            hours_start=start_hour,
+            minutes_start=start_min,
+            hours_end=end_hour,
+            minutes_end=end_min,
+            promotion_id=common_entities[promo_key],
+            teacher_id=common_entities[teacher_key],
+            course_id=common_entities[course_key],
+            room_id=common_entities[room_key]
+        )
+
+    def test_given_valid_slots_in_constructor_when_create_planning_then_return_planning(self, common_entities):
         # Given
         planning_id = PlanningId(id="1")
         date_planning = date(2021, 9, 1)
         promotion_id = common_entities["promotion1"]
-        slot1 = PlanningSlot(
-            id=PlanningSlotId(id="1"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        slot2 = PlanningSlot(
-            id=PlanningSlotId(id="2"),
-            date_start=date(2021, 9, 1),
-            hours_start=10,
-            minutes_start=15,
-            hours_end=11,
-            minutes_end=15,
-            promotion_id=common_entities["promotion2"],
-            teacher_id=common_entities["teacher2"],
-            course_id=common_entities["course2"],
-            room_id=common_entities["room2"]
-        )
+        slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
+        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2", course_key="course2", room_key="room2")
         # When
         planning = Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
         # Then
@@ -59,171 +57,63 @@ class TestPlanning:
         assert planning.promotion_id == promotion_id
         assert len(planning.slots) == 2
 
-    def test_given_colliding_slots_when_create_planning_then_raise_value_error(self, common_entities):
+    def test_add_valid_slot_to_planning(self, empty_planning, common_entities):
         # Given
-        planning_id = PlanningId(id="1")
-        date_planning = date(2021, 9, 1)
-        promotion_id = common_entities["promotion1"]
-        slot1 = PlanningSlot(
-            id=PlanningSlotId(id="1"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        slot2 = PlanningSlot(
-            id=PlanningSlotId(id="2"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=30,
-            hours_end=10,
-            minutes_end=30,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        # When/Then
-        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
-            Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
-
-    def test_given_valid_slots_with_different_promotions_teachers_rooms_when_create_planning_then_return_planning(self, common_entities):
-        # Given
-        planning_id = PlanningId(id="1")
-        date_planning = date(2021, 9, 1)
-        promotion_id = common_entities["promotion1"]
-        slot1 = PlanningSlot(
-            id=PlanningSlotId(id="1"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        slot2 = PlanningSlot(
-            id=PlanningSlotId(id="2"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=common_entities["promotion2"],
-            teacher_id=common_entities["teacher2"],
-            course_id=common_entities["course2"],
-            room_id=common_entities["room2"]
-        )
+        slot = self.create_slot("1", 9, 0, 10, 0, common_entities)
         # When
-        planning = Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
+        empty_planning.add_slot(slot)
         # Then
-        assert planning.id == planning_id
-        assert planning.date == date_planning
-        assert planning.promotion_id == promotion_id
-        assert len(planning.slots) == 2
+        assert len(empty_planning.slots) == 1
+        assert empty_planning.slots[0] == slot
 
-    def test_given_slots_with_same_teacher_when_create_planning_then_raise_value_error(self, common_entities):
+    def test_add_colliding_slot_to_planning_then_raise_value_error(self, empty_planning, common_entities):
         # Given
-        planning_id = PlanningId(id="1")
-        date_planning = date(2021, 9, 1)
-        promotion_id = common_entities["promotion1"]
-        slot1 = PlanningSlot(
-            id=PlanningSlotId(id="1"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        slot2 = PlanningSlot(
-            id=PlanningSlotId(id="2"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=30,
-            hours_end=10,
-            minutes_end=30,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course2"],
-            room_id=common_entities["room2"]
-        )
+        slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
+        slot2 = self.create_slot("2", 9, 30, 10, 30, common_entities)  # collision avec slot1 (même teacher, promotion, room)
+        empty_planning.add_slot(slot1)
         # When/Then
-        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
-            Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
+        with pytest.raises(ValueError, match="Collision detected"):
+            empty_planning.add_slot(slot2)
 
-    def test_given_slots_with_same_room_when_create_planning_then_raise_value_error(self, common_entities):
+    def test_remove_slot_from_planning(self, empty_planning, common_entities):
         # Given
-        planning_id = PlanningId(id="1")
-        date_planning = date(2021, 9, 1)
-        promotion_id = common_entities["promotion1"]
-        slot1 = PlanningSlot(
-            id=PlanningSlotId(id="1"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        slot2 = PlanningSlot(
-            id=PlanningSlotId(id="2"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=30,
-            hours_end=10,
-            minutes_end=30,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher2"],
-            course_id=common_entities["course2"],
-            room_id=common_entities["room1"]
-        )
-        # When/Then
-        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
-            Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
+        slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
+        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2", course_key="course2", room_key="room2")
+        empty_planning.add_slot(slot1)
+        empty_planning.add_slot(slot2)
+        # When
+        empty_planning.remove_slot(slot1.id)
+        # Then
+        assert len(empty_planning.slots) == 1
+        assert empty_planning.slots[0] == slot2
 
-    def test_given_slots_with_same_promotion_when_create_planning_then_raise_value_error(self, common_entities):
+    def test_update_slot_in_planning_successfully(self, empty_planning, common_entities):
         # Given
-        planning_id = PlanningId(id="1")
-        date_planning = date(2021, 9, 1)
-        promotion_id = common_entities["promotion1"]
-        slot1 = PlanningSlot(
-            id=PlanningSlotId(id="1"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=0,
-            hours_end=10,
-            minutes_end=0,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher1"],
-            course_id=common_entities["course1"],
-            room_id=common_entities["room1"]
-        )
-        slot2 = PlanningSlot(
-            id=PlanningSlotId(id="2"),
-            date_start=date(2021, 9, 1),
-            hours_start=9,
-            minutes_start=30,
-            hours_end=10,
-            minutes_end=30,
-            promotion_id=promotion_id,
-            teacher_id=common_entities["teacher2"],
-            course_id=common_entities["course2"],
-            room_id=common_entities["room2"]
-        )
+        slot = self.create_slot("1", 9, 0, 10, 0, common_entities)
+        empty_planning.add_slot(slot)
+        # When: mise à jour du slot pour décaler l'horaire (sans collision)
+        updated_slot = self.create_slot("1", 10, 0, 11, 0, common_entities)
+        empty_planning.update_slot(updated_slot)
+        # Then
+        assert empty_planning.slots[0].hours_start == 10
+        assert empty_planning.slots[0].hours_end == 11
+
+    def test_update_slot_in_planning_with_collision_then_raise_value_error(self, empty_planning, common_entities):
+        # Given
+        slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
+        # Ici, slot2 initial est sans collision (différents teacher, promotion, etc.)
+        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2", course_key="course2", room_key="room2")
+        empty_planning.add_slot(slot1)
+        empty_planning.add_slot(slot2)
+        # When: mise à jour de slot2 pour créer une collision avec slot1
+        # Pour provoquer la collision, on force slot2 à partager le même teacher que slot1.
+        updated_slot2 = self.create_slot("2", 9, 30, 10, 30, common_entities, promo_key="promotion2", teacher_key="teacher1", course_key="course2", room_key="room2")
+        with pytest.raises(ValueError, match="Collision detected"):
+            empty_planning.update_slot(updated_slot2)
+
+    def test_update_nonexistent_slot_then_raise_value_error(self, empty_planning, common_entities):
+        # Given
+        slot = self.create_slot("1", 9, 0, 10, 0, common_entities)
         # When/Then
-        with pytest.raises(ValueError, match='Collision detected between slot 1 and slot 2'):
-            Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
+        with pytest.raises(ValueError, match="Slot not found"):
+            empty_planning.update_slot(slot)

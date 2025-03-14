@@ -17,7 +17,7 @@ class TeacherRepositoryDumb(BaseRepository, ITeacherRepository):
 
     def find_by_id(self, id: TeacherId):
         for teacher in self.teachers:
-            if teacher.id == id:
+            if str(teacher.id) == str(id):
                 return teacher
         raise ValueError("Teacher not found")
 

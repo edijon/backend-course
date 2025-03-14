@@ -1,12 +1,18 @@
 from fastapi.testclient import TestClient
 from fastapi import status
-from typing import List
 from src.tests.persistence import PlanningRepositoryDumb, PromotionRepositoryDumb, TeacherRepositoryDumb, CourseRepositoryDumb, RoomRepositoryDumb
 from src.main.web.main import app
-from src.main.web.planning import Planning
+from src.main.web.planning import Planning, PlanningSlot, PlanningSlotWrite, PlanningWrite
+from src.main.web.promotions import Promotion
+from src.main.web import state
+from datetime import date
+import src.main.domain as domain
+import uuid
+
+# TODO: planning devrait utiliser promotion_id pas promotion
 
 API_BASIS = "/api/v1"
-API_PLANNING = f"{API_BASIS}/planning"
+API_PLANNINGS = f"{API_BASIS}/plannings"
 API_TOKEN = "/token"
 
 client = TestClient(app)
@@ -19,62 +25,70 @@ def get_auth_token():
 def assert_response_status(response, expected_status):
     assert response.status_code == expected_status, response.text
 
-class TestPlanningEndpoint:
-    """Test the planning endpoint"""
-    
-    def setup_method(self):
-        self.client = TestClient(app)
+def assert_list_of_models(json_list, model_class, min_length=2):
+    assert isinstance(json_list, list)
+    assert len(json_list) >= min_length
+    for item in json_list:
+        model_class(**item)
 
-    def test_given_repository_when_get_planning_then_get_200_and_planning_ordered(self):
-        self._setup_repositories()
-        response = self.client.get(API_PLANNING)
-        assert_response_status(response, status.HTTP_200_OK)
-        planning_json = response.json()
-        assert isinstance(planning_json, list)
-        assert len(planning_json) >= 1
-        self._assert_planning_ordered(planning_json)
+def setup_module(module):
+    state.repository_plannings = PlanningRepositoryDumb()
+    state.repository_promotions = PromotionRepositoryDumb()
+    state.repository_teachers = TeacherRepositoryDumb()
+    state.repository_courses = CourseRepositoryDumb()
+    state.repository_rooms = RoomRepositoryDumb()
+    # Add initial data
+    planning1 = domain.Planning(
+        id=domain.PlanningId(id="1"),
+        date=date(2023, 10, 10),
+        promotion_id=domain.PromotionId(id="1"),
+        slots=[]
+    )
+    planning2 = domain.Planning(
+        id=domain.PlanningId(id="2"),
+        date=date(2023, 10, 11),
+        promotion_id=domain.PromotionId(id="2"),
+        slots=[]
+    )
+    state.repository_plannings.save(planning1)
+    state.repository_plannings.save(planning2)
 
-    def test_given_date_and_promotion_id_when_get_planning_then_get_200_and_filtered_planning(self):
-        self._setup_repositories()
-        date = "2021-09-01"
-        promotion_id = "1"
-        response = self.client.get(f"{API_PLANNING}?date={date}&promotion_id={promotion_id}")
-        assert_response_status(response, status.HTTP_200_OK)
-        planning_json = response.json()
-        assert isinstance(planning_json, list)
-        assert len(planning_json) >= 1
-        for planning in planning_json:
-            assert planning["date"] == date
-            assert planning["promotion"]["id"] == promotion_id
 
-    def _setup_repositories(self):
-        from src.main.web import state
-        state.repository_plannings = PlanningRepositoryDumb()
-        state.repository_promotions = PromotionRepositoryDumb()
-        state.repository_teachers = TeacherRepositoryDumb()
-        state.repository_courses = CourseRepositoryDumb()
-        state.repository_rooms = RoomRepositoryDumb()
+def test_get_plannings():
+    response = client.get(API_PLANNINGS)
+    assert_response_status(response, status.HTTP_200_OK)
+    assert_list_of_models(response.json(), Planning)
 
-    def _assert_planning_ordered(self, planning_json: List[dict]):
-        previous_date = None
-        for planning in planning_json:
-            self._assert_slots_ordered(planning['slots'], previous_date)
+def test_add_planning():
+    token = get_auth_token()
+    planning_data = {
+        "id": str(uuid.uuid4()),
+        "date": "2023-10-12",
+        "promotion_id": "1",
+        "slots": []
+    }
+    response = client.post(API_PLANNINGS, json=planning_data, headers={"Authorization": f"Bearer {token}"})
+    assert_response_status(response, status.HTTP_200_OK)
+    assert response.json()["date"] == planning_data["date"]
 
-    def _assert_slots_ordered(self, slots, previous_date):
-        previous_slot_time = None
-        for slot in slots:
-            current_date = slot['date_start']
-            self._assert_date_order(current_date, previous_date)
-            previous_date = current_date
+def test_get_planning_by_id():
+    response = client.get(f"{API_PLANNINGS}/1")
+    assert_response_status(response, status.HTTP_200_OK)
+    assert response.json()["id"] == "1"
 
-            current_slot_time = (slot['hours_start'], slot['minutes_start'])
-            self._assert_slot_time_order(current_slot_time, previous_slot_time)
-            previous_slot_time = current_slot_time
-
-    def _assert_date_order(self, current_date, previous_date):
-        if previous_date is not None:
-            assert current_date >= previous_date
-
-    def _assert_slot_time_order(self, current_slot_time, previous_slot_time):
-        if previous_slot_time is not None:
-            assert current_slot_time >= previous_slot_time
+def test_add_planning_slot():
+    token = get_auth_token()
+    slot_data = {
+        "id": str(uuid.uuid4()),
+        "hours_start": 9,
+        "minutes_start": 0,
+        "hours_end": 10,
+        "minutes_end": 30,
+        "promotion_id": "1",
+        "teacher_id": "1",
+        "course_id": "1",
+        "room_id": "1"
+    }
+    response = client.post(f"{API_PLANNINGS}/1/slots", json=slot_data, headers={"Authorization": f"Bearer {token}"})
+    assert_response_status(response, status.HTTP_200_OK)
+    assert response.json()["slots"][0]["hours_start"] == slot_data["hours_start"]

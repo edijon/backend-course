@@ -18,7 +18,7 @@ class CourseRepositoryDumb(BaseRepository, ICourseRepository):
 
     def find_by_id(self, id: CourseId):
         for course in self.courses:
-            if course.id == id:
+            if str(course.id) == str(id):
                 return course
         raise ValueError("Course not found")
 
