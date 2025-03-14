@@ -1,140 +1,23 @@
-from abc import ABC, abstractmethod
-from pydantic import BaseModel, ConfigDict
 from typing import List
-from pydantic import Field, model_validator
+from abc import ABC, abstractmethod
 from datetime import time, timedelta, date
-import uuid
-
-
-class BaseIdentifier(BaseModel):
-    """Value object holding Component identity."""
-    id: str
-    model_config = ConfigDict(frozen=True)
-
-    def __str__(self):
-        return self.id
-
-
-class BaseRepository:
-    """Base repository with common functionality."""
-    def next_identity(self):
-        return str(uuid.uuid4())
-
-
-class PromotionId(BaseIdentifier):
-    """Value object holding Promotion identity."""
-
-
-class Promotion(BaseModel):
-    """Aggregate root, entity holding promotion."""
-    id: PromotionId
-    study_year: int
-    diploma: str
-    name: str
-
-
-class IPromotionRepository(ABC):
-    """Interface for handling promotions persistence."""
-    @abstractmethod
-    def next_identity(self) -> PromotionId:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_all(self) -> List[Promotion]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_by_id(self, id: PromotionId) -> Promotion:
-        raise NotImplementedError
-
-
-class TeacherId(BaseIdentifier):
-    """Value object holding Teacher identity."""
-
-
-class Teacher(BaseModel):
-    """Aggregate root, entity holding teacher."""
-    id: TeacherId
-    name: str
-    firstname: str
-
-
-class ITeacherRepository(ABC):
-    """Interface for handling teachers persistence."""
-    @abstractmethod
-    def next_identity(self) -> TeacherId:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_all(self) -> List[Teacher]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_by_id(self, id: TeacherId) -> Teacher:
-        raise NotImplementedError
-
-
-class CourseId(BaseIdentifier):
-    """Value object holding Course identity."""
-
-
-class Course(BaseModel):
-    """Aggregate root, entity holding course."""
-    id: CourseId
-    name: str
-
-
-class ICourseRepository(ABC):
-    """Interface for handling courses persistence."""
-    @abstractmethod
-    def next_identity(self) -> CourseId:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_all(self) -> List[Course]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_by_id(self, id: CourseId) -> Course:
-        raise NotImplementedError
-
-
-class RoomId(BaseIdentifier):
-    """Value object holding Room identity."""
-
-
-class Room(BaseModel):
-    """Aggregate root, entity holding room."""
-    id: RoomId
-    name: str
-    description: str
-
-
-class IRoomRepository(ABC):
-    """Interface for handling rooms persistence."""
-    @abstractmethod
-    def next_identity(self) -> RoomId:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_all(self) -> List[Room]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def find_by_id(self, id: RoomId) -> Room:
-        raise NotImplementedError
-
+from pydantic import BaseModel, Field, model_validator
+from .base import BaseIdentifier
+from .promotion import PromotionId
+from .teacher import TeacherId
+from .course import CourseId
+from .room import RoomId
 
 class PlanningSlotId(BaseIdentifier):
     """Value object holding PlanningSlot identity."""
-
+    pass
 
 class PlanningSlot(BaseModel):
     """
     PlanningSlot is an aggregate root entity that holds the details of a planning slot.
     Attributes:
         id (PlanningSlotId): Unique identifier for the planning slot.
-        date_start(date): Date of the planning slot.
+        date_start (date): Date of the planning slot.
         hours_start (int): Starting hour of the planning slot (must be between 8 and 17 inclusive).
         minutes_start (int): Starting minute of the planning slot (must be between 0 and 59 inclusive).
         hours_end (int): Ending hour of the planning slot (must be between 8 and 17 inclusive).
@@ -144,12 +27,10 @@ class PlanningSlot(BaseModel):
         course_id (CourseId): ID of the course associated with the planning slot.
         room_id (RoomId): ID of the room where the planning slot will take place.
     Validators:
-        check_end_time: Ensures that the end time is after the start time.
-        check_duration: Ensures that the duration of the slot is at least 30 minutes and at most 4 hours.
-        check_start_time: Ensures that the first slot can only start at 08:15 or later.
-        check_end_time_limit: Ensures that the last slot can only end at 17:15 or earlier.
+        check_times: Ensures that the end time is after the start time, the duration is between 30 minutes and 4 hours,
+                      the first slot starts at 08:15 or later, and the last slot ends at 17:15 or earlier.
     Note:
-        The Field(..., ge=8, le=17) and similar constraints are used to enforce that the values are within the specified range.
+        Les contraintes Field(..., ge=8, le=17) et similaires servent à imposer les bornes des valeurs.
     """
     id: PlanningSlotId
     date_start: date
@@ -168,9 +49,7 @@ class PlanningSlot(BaseModel):
         end_time = time(self.hours_end, self.minutes_end)
         if end_time <= start_time:
             raise ValueError("End time must be after start time")
-        duration = timedelta(
-            hours=end_time.hour, minutes=end_time.minute
-        ) - timedelta(hours=start_time.hour, minutes=start_time.minute)
+        duration = timedelta(hours=end_time.hour, minutes=end_time.minute) - timedelta(hours=start_time.hour, minutes=start_time.minute)
         if duration < timedelta(minutes=30):
             raise ValueError("Slot duration must be at least 30 minutes")
         if duration > timedelta(hours=4):
@@ -180,7 +59,6 @@ class PlanningSlot(BaseModel):
         if self.hours_end == 17 and self.minutes_end > 15:
             raise ValueError("Last slot can only end at 17:15 or earlier")
         return self
-
 
 class IPlanningSlotRepository(ABC):
     """Interface for handling planning slots persistence."""
@@ -192,10 +70,9 @@ class IPlanningSlotRepository(ABC):
     def find_all(self) -> List[PlanningSlot]:
         raise NotImplementedError
 
-
 class PlanningId(BaseIdentifier):
     """Value object holding Planning identity."""
-
+    pass
 
 class Planning(BaseModel):
     """
@@ -229,7 +106,6 @@ class Planning(BaseModel):
             end2 = time(slot2.hours_end, slot2.minutes_end)
             return start1 < end2 and start2 < end1
         return False
-
 
 class IPlanningRepository(ABC):
     """Interface for handling plannings persistence."""
