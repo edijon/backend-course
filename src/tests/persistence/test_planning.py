@@ -4,6 +4,9 @@ from src.main.domain import (
 )
 from datetime import date
 from typing import List
+from sqlmodel import Session, create_engine, SQLModel
+from src.main.persistence.planning import Planning as DBPlanning, PlanningSlot as DBPlanningSlot, PlanningRepository
+import pytest
 
 class PlanningRepositoryDumb(BaseRepository, IPlanningRepository):
     """Dumb implementation of IPlanningRepository."""
@@ -29,7 +32,8 @@ class PlanningRepositoryDumb(BaseRepository, IPlanningRepository):
                 promotion_id=PromotionId(id="1"),
                 teacher_id=TeacherId(id="1"),
                 course_id=CourseId(id="1"),
-                room_id=RoomId(id="1")
+                room_id=RoomId(id="1"),
+                planning_id=PlanningId(id="1")
             ),
             PlanningSlot(
                 id=PlanningSlotId(id="2"),
@@ -41,7 +45,8 @@ class PlanningRepositoryDumb(BaseRepository, IPlanningRepository):
                 promotion_id=PromotionId(id="2"),
                 teacher_id=TeacherId(id="2"),
                 course_id=CourseId(id="2"),
-                room_id=RoomId(id="2")
+                room_id=RoomId(id="2"),
+                planning_id=PlanningId(id="1")
             )
         ]
 

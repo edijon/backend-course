@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
+
 class BaseIdentifier(BaseModel):
     """Value object holding Component identity."""
     id: str
@@ -7,6 +8,7 @@ class BaseIdentifier(BaseModel):
 
     def __str__(self):
         return self.id
+
 
 class BaseRepository:
     """Base repository with common functionality."""
