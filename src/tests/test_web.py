@@ -3,54 +3,38 @@ from fastapi import status
 from typing import List
 from .test_persistence import (
     PromotionRepositoryDumb, PromotionRepositoryException, PlanningRepositoryDumb,
-    TeacherRepositoryDumb, TeacherRepositoryException, CourseRepositoryDumb, CourseRepositoryException, RoomRepositoryDumb)
+    TeacherRepositoryDumb, TeacherRepositoryException, CourseRepositoryDumb, CourseRepositoryException, RoomRepositoryDumb,
+    RoomRepositoryException, PlanningRepositoryException)
 import src.main.web as web
-
 
 API_BASIS = "/api/v1"
 API_PROMOTIONS = f"{API_BASIS}/promotions"
 API_PLANNING = f"{API_BASIS}/planning"
 API_COURSES = f"{API_BASIS}/courses"
 API_TEACHERS = f"{API_BASIS}/teachers"
+API_ROOMS = f"{API_BASIS}/rooms"
+API_PLANNING_SLOTS = f"{API_BASIS}/planning-slots"
 API_TOKEN = "/token"
 
-
 client = TestClient(web.app)
-
 
 def get_auth_token():
     response = client.post(API_TOKEN, data={"username": "user", "password": "password"})
     assert response.status_code == status.HTTP_200_OK, response.text
     return response.json()["access_token"]
 
-
 def assert_response_status(response, expected_status):
     assert response.status_code == expected_status, response.text
 
-
-def assert_promotion_list(promotions_json):
-    assert isinstance(promotions_json, list)
-    assert len(promotions_json) >= 2
-    for promotion_json in promotions_json:
-        web.Promotion(**promotion_json)
-
-
-def assert_teacher_list(teachers_json):
-    assert isinstance(teachers_json, list)
-    assert len(teachers_json) >= 2
-    for teacher_json in teachers_json:
-        web.Teacher(**teacher_json)
-
-
-def assert_course_list(courses_json):
-    assert isinstance(courses_json, list)
-    assert len(courses_json) >= 2
-    for course_json in courses_json:
-        web.Course(**course_json)
-
+def assert_list_of_models(json_list, model_class, min_length=2):
+    assert isinstance(json_list, list)
+    assert len(json_list) >= min_length
+    for item in json_list:
+        model_class(**item)
 
 class TestPromotionsEndpoint:
-    """Test the promotions endpoint """
+    """Test the promotions endpoint"""
+    
     def setup_method(self):
         self.client = TestClient(web.app)
 
@@ -58,7 +42,7 @@ class TestPromotionsEndpoint:
         web.repository_promotions = PromotionRepositoryDumb()
         response = self.client.get(API_PROMOTIONS)
         assert_response_status(response, status.HTTP_200_OK)
-        assert_promotion_list(response.json())
+        assert_list_of_models(response.json(), web.Promotion)
 
     def test_given_repository_when_get_promotions_raises_exception_then_get_500(self):
         web.repository_promotions = PromotionRepositoryException()
@@ -119,9 +103,9 @@ class TestPromotionsEndpoint:
         response = self.client.delete(f"{API_PROMOTIONS}/1", headers={"Authorization": "Bearer invalid-token"})
         assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
 
-
 class TestTeachersEndpoint:
-    """Test the teachers endpoint """
+    """Test the teachers endpoint"""
+    
     def setup_method(self):
         self.client = TestClient(web.app)
 
@@ -129,7 +113,7 @@ class TestTeachersEndpoint:
         web.repository_teachers = TeacherRepositoryDumb()
         response = self.client.get(API_TEACHERS)
         assert_response_status(response, status.HTTP_200_OK)
-        assert_teacher_list(response.json())
+        assert_list_of_models(response.json(), web.Teacher)
 
     def test_given_repository_when_get_teachers_raises_exception_then_get_500(self):
         web.repository_teachers = TeacherRepositoryException()
@@ -186,9 +170,9 @@ class TestTeachersEndpoint:
         response = self.client.delete(f"{API_TEACHERS}/1", headers={"Authorization": "Bearer invalid-token"})
         assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
 
-
 class TestCoursesEndpoint:
-    """Test the courses endpoint """
+    """Test the courses endpoint"""
+    
     def setup_method(self):
         self.client = TestClient(web.app)
 
@@ -196,7 +180,7 @@ class TestCoursesEndpoint:
         web.repository_courses = CourseRepositoryDumb()
         response = self.client.get(API_COURSES)
         assert_response_status(response, status.HTTP_200_OK)
-        assert_course_list(response.json())
+        assert_list_of_models(response.json(), web.Course)
 
     def test_given_repository_when_get_courses_raises_exception_then_get_500(self):
         web.repository_courses = CourseRepositoryException()
@@ -249,18 +233,102 @@ class TestCoursesEndpoint:
         response = self.client.delete(f"{API_COURSES}/1", headers={"Authorization": "Bearer invalid-token"})
         assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
 
+class TestRoomsEndpoint:
+    """Test the rooms endpoint"""
+    
+    def setup_method(self):
+        self.client = TestClient(web.app)
+
+    def test_given_repository_when_get_rooms_then_get_200_and_rooms_list(self):
+        web.repository_rooms = RoomRepositoryDumb()
+        response = self.client.get(API_ROOMS)
+        assert_response_status(response, status.HTTP_200_OK)
+        assert_list_of_models(response.json(), web.Room)
+
+    def test_given_repository_when_get_rooms_raises_exception_then_get_500(self):
+        web.repository_rooms = RoomRepositoryException()
+        response = self.client.get(API_ROOMS)
+        assert_response_status(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_given_valid_token_when_add_room_then_get_200(self):
+        token = get_auth_token()
+        room_data = {
+            "id": "1",
+            "name": "Room 101",
+            "description": "First floor room"
+        }
+        response = self.client.post(API_ROOMS, json=room_data, headers={"Authorization": f"Bearer {token}"})
+        assert_response_status(response, status.HTTP_200_OK)
+        assert response.json() == room_data
+
+    def test_given_invalid_token_when_add_room_then_get_401(self):
+        room_data = {
+            "id": "1",
+            "name": "Room 101",
+            "description": "First floor room"
+        }
+        response = self.client.post(API_ROOMS, json=room_data, headers={"Authorization": "Bearer invalid-token"})
+        assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
+
+    def test_given_valid_token_when_update_room_then_get_200(self):
+        token = get_auth_token()
+        room_data = {
+            "id": "1",
+            "name": "Room 101",
+            "description": "First floor room"
+        }
+        response = self.client.put(f"{API_ROOMS}/1", json=room_data, headers={"Authorization": f"Bearer {token}"})
+        assert_response_status(response, status.HTTP_200_OK)
+        assert response.json() == room_data
+
+    def test_given_invalid_token_when_update_room_then_get_401(self):
+        room_data = {
+            "id": "1",
+            "name": "Room 101",
+            "description": "First floor room"
+        }
+        response = self.client.put(f"{API_ROOMS}/1", json=room_data, headers={"Authorization": "Bearer invalid-token"})
+        assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
+
+    def test_given_valid_token_when_delete_room_then_get_200(self):
+        token = get_auth_token()
+        response = self.client.delete(f"{API_ROOMS}/1", headers={"Authorization": f"Bearer {token}"})
+        assert_response_status(response, status.HTTP_200_OK)
+        assert response.json() == {"message": "Room deleted"}
+
+    def test_given_invalid_token_when_delete_room_then_get_401(self):
+        response = self.client.delete(f"{API_ROOMS}/1", headers={"Authorization": "Bearer invalid-token"})
+        assert_response_status(response, status.HTTP_401_UNAUTHORIZED)
+
+class TestPlanningSlotsEndpoint:
+    """Test the planning slots endpoint"""
+    
+    def setup_method(self):
+        web.repository_promotions = PromotionRepositoryDumb()
+        web.repository_teachers = TeacherRepositoryDumb()
+        web.repository_courses = CourseRepositoryDumb()
+        web.repository_rooms = RoomRepositoryDumb()
+        self.client = TestClient(web.app)
+
+    def test_given_repository_when_get_planning_slots_then_get_200_and_planning_slots_list(self):
+        web.repository_plannings = PlanningRepositoryDumb()
+        response = self.client.get(API_PLANNING_SLOTS)
+        assert_response_status(response, status.HTTP_200_OK)
+        assert_list_of_models(response.json(), web.PlanningSlot)
+
+    def test_given_repository_when_get_planning_slots_raises_exception_then_get_500(self):
+        web.repository_plannings = PlanningRepositoryException()
+        response = self.client.get(API_PLANNING_SLOTS)
+        assert_response_status(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TestPlanningEndpoint:
-    """Test the planning endpoint """
+    """Test the planning endpoint"""
+    
     def setup_method(self):
         self.client = TestClient(web.app)
 
     def test_given_repository_when_get_planning_then_get_200_and_planning_ordered(self):
-        web.repository_plannings = PlanningRepositoryDumb()
-        web.repository_promotions = PromotionRepositoryDumb()  # Ensure correct repository is used
-        web.repository_teachers = TeacherRepositoryDumb()  # Ensure correct repository is used
-        web.repository_courses = CourseRepositoryDumb()  # Ensure correct repository is used
-        web.repository_rooms = RoomRepositoryDumb()  # Ensure correct repository is used
+        self._setup_repositories()
         response = self.client.get(API_PLANNING)
         assert_response_status(response, status.HTTP_200_OK)
         planning_json = response.json()
@@ -269,11 +337,7 @@ class TestPlanningEndpoint:
         self._assert_planning_ordered(planning_json)
 
     def test_given_date_and_promotion_id_when_get_planning_then_get_200_and_filtered_planning(self):
-        web.repository_plannings = PlanningRepositoryDumb()
-        web.repository_promotions = PromotionRepositoryDumb()  # Ensure correct repository is used
-        web.repository_teachers = TeacherRepositoryDumb()  # Ensure correct repository is used
-        web.repository_courses = CourseRepositoryDumb()  # Ensure correct repository is used
-        web.repository_rooms = RoomRepositoryDumb()  # Ensure correct repository is used
+        self._setup_repositories()
         date = "2021-09-01"
         promotion_id = "1"
         response = self.client.get(f"{API_PLANNING}?date={date}&promotion_id={promotion_id}")
@@ -284,6 +348,13 @@ class TestPlanningEndpoint:
         for planning in planning_json:
             assert planning["date"] == date
             assert planning["promotion"]["id"] == promotion_id
+
+    def _setup_repositories(self):
+        web.repository_plannings = PlanningRepositoryDumb()
+        web.repository_promotions = PromotionRepositoryDumb()
+        web.repository_teachers = TeacherRepositoryDumb()
+        web.repository_courses = CourseRepositoryDumb()
+        web.repository_rooms = RoomRepositoryDumb()
 
     def _assert_planning_ordered(self, planning_json):
         previous_date = None

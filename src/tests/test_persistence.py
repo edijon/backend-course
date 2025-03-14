@@ -99,6 +99,14 @@ class RoomRepositoryDumb(domain.BaseRepository, domain.IRoomRepository):
         raise ValueError("Room not found")
 
 
+class RoomRepositoryException(RoomRepositoryDumb):
+    def find_all(self):
+        raise Exception("Test exception")
+
+    def find_by_id(self, id: domain.RoomId):
+        raise Exception("Test exception")
+
+
 class PlanningRepositoryDumb(domain.BaseRepository, domain.IPlanningRepository):
     """Dumb implementation of IPlanningRepository."""
     def __init__(self):
@@ -150,3 +158,20 @@ class PlanningRepositoryDumb(domain.BaseRepository, domain.IPlanningRepository):
 
     def find_by_date_and_promotion(self, date: date, promotion_id: domain.PromotionId) -> List[domain.Planning]:
         return [planning for planning in self.plannings if planning.date == date and planning.promotion_id == promotion_id]
+
+    def find_all_slots(self):
+        slots = []
+        for planning in self.plannings:
+            slots.extend(planning.slots)
+        return slots
+
+
+class PlanningRepositoryException(PlanningRepositoryDumb):
+    def find_all(self):
+        raise Exception("Test exception")
+
+    def find_by_id(self, id: domain.PlanningId):
+        raise Exception("Test exception")
+
+    def find_all_slots(self):
+        raise Exception("Test exception")
