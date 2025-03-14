@@ -125,6 +125,88 @@ async def add_promotion(promotion: Promotion, user: dict = Depends(get_current_u
     return promotion
 
 
+# Endpoint to update a promotion (requires authentication)
+@app.put("/api/v1/promotions/{promotion_id}", response_model=Promotion)
+async def update_promotion(promotion_id: str, promotion: Promotion, user: dict = Depends(get_current_user)) -> Promotion:
+    global repository_promotions
+    # Add logic to update the promotion in the repository
+    return promotion
+
+# Endpoint to delete a promotion (requires authentication)
+@app.delete("/api/v1/promotions/{promotion_id}", response_model=dict)
+async def delete_promotion(promotion_id: str, user: dict = Depends(get_current_user)) -> dict:
+    global repository_promotions
+    # Add logic to delete the promotion from the repository
+    return {"message": "Promotion deleted"}
+
+# Endpoint to get all teachers
+@app.get("/api/v1/teachers", response_model=List[Teacher])
+async def get_teachers() -> List[Teacher]:
+    global repository_teachers
+    try:
+        teacher_entities = repository_teachers.find_all()
+        teachers = [await get_teacher_from_entity(entity) for entity in teacher_entities]
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
+    return teachers
+
+# Endpoint to add a new teacher (requires authentication)
+@app.post("/api/v1/teachers", response_model=Teacher)
+async def add_teacher(teacher: Teacher, user: dict = Depends(get_current_user)) -> Teacher:
+    global repository_teachers
+    # Add logic to save the teacher to the repository
+    return teacher
+
+# Endpoint to update a teacher (requires authentication)
+@app.put("/api/v1/teachers/{teacher_id}", response_model=Teacher)
+async def update_teacher(teacher_id: str, teacher: Teacher, user: dict = Depends(get_current_user)) -> Teacher:
+    global repository_teachers
+    # Add logic to update the teacher in the repository
+    return teacher
+
+# Endpoint to delete a teacher (requires authentication)
+@app.delete("/api/v1/teachers/{teacher_id}", response_model=dict)
+async def delete_teacher(teacher_id: str, user: dict = Depends(get_current_user)) -> dict:
+    global repository_teachers
+    # Add logic to delete the teacher from the repository
+    return {"message": "Teacher deleted"}
+
+# Endpoint to get all courses
+@app.get("/api/v1/courses", response_model=List[Course])
+async def get_courses() -> List[Course]:
+    global repository_courses
+    try:
+        course_entities = repository_courses.find_all()
+        courses = [await get_course_from_entity(entity) for entity in course_entities]
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
+    return courses
+
+
+# Endpoint to add a new course (requires authentication)
+@app.post("/api/v1/courses", response_model=Course)
+async def add_course(course: Course, user: dict = Depends(get_current_user)) -> Course:
+    global repository_courses
+    # Add logic to save the course to the repository
+    return course
+
+
+# Endpoint to update a course (requires authentication)
+@app.put("/api/v1/courses/{course_id}", response_model=Course)
+async def update_course(course_id: str, course: Course, user: dict = Depends(get_current_user)) -> Course:
+    global repository_courses
+    # Add logic to update the course in the repository
+    return course
+
+
+# Endpoint to delete a course (requires authentication)
+@app.delete("/api/v1/courses/{course_id}", response_model=dict)
+async def delete_course(course_id: str, user: dict = Depends(get_current_user)) -> dict:
+    global repository_courses
+    # Add logic to delete the course from the repository
+    return {"message": "Course deleted"}
+
+
 # Endpoint to get all planning
 @app.get("/api/v1/planning", response_model=List[Planning])
 async def get_planning(date: str = None, promotion_id: str = None) -> List[Planning]:
@@ -138,14 +220,6 @@ async def get_planning(date: str = None, promotion_id: str = None) -> List[Plann
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return plannings
-
-
-# Endpoint to add a new planning (requires authentication)
-@app.post("/api/v1/planning", response_model=Planning)
-async def add_planning(planning: Planning, user: dict = Depends(get_current_user)) -> Planning:
-    global repository_plannings
-    # Add logic to save the planning to the repository
-    return planning
 
 
 # Helper functions to convert domain entities to Pydantic models

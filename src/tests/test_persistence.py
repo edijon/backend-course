@@ -47,6 +47,14 @@ class TeacherRepositoryDumb(domain.BaseRepository, domain.ITeacherRepository):
         raise ValueError("Teacher not found")
 
 
+class TeacherRepositoryException(TeacherRepositoryDumb):
+    def find_all(self):
+        raise Exception("Test exception")
+
+    def find_by_id(self, id: domain.TeacherId):
+        raise Exception("Test exception")
+
+
 class CourseRepositoryDumb(domain.BaseRepository, domain.ICourseRepository):
     """Dumb implementation of ICourseRepository."""
     def __init__(self):
@@ -63,6 +71,14 @@ class CourseRepositoryDumb(domain.BaseRepository, domain.ICourseRepository):
             if course.id == id:
                 return course
         raise ValueError("Course not found")
+
+
+class CourseRepositoryException(CourseRepositoryDumb):
+    def find_all(self):
+        raise Exception("Test exception")
+
+    def find_by_id(self, id: domain.CourseId):
+        raise Exception("Test exception")
 
 
 class RoomRepositoryDumb(domain.BaseRepository, domain.IRoomRepository):
