@@ -1,7 +1,7 @@
 from src.main.domain import Course as DomainCourse
 from src.main.domain import BaseRepository, ICourseRepository, CourseId
 from sqlmodel import Session, create_engine, SQLModel
-from src.main.persistence.course import Course, CourseRepository
+from src.main.persistence.course import CourseRepository
 import pytest
 
 
@@ -22,6 +22,7 @@ class CourseRepositoryDumb(BaseRepository, ICourseRepository):
                 return course
         raise ValueError("Course not found")
 
+
 class CourseRepositoryException(CourseRepositoryDumb):
     def find_all(self):
         raise Exception("Test exception")
@@ -41,13 +42,14 @@ def session_fixture():
         yield session
     SQLModel.metadata.drop_all(engine)
 
+
 def test_course_repository(session):
     # Given
     name = "Course A"
     repository = CourseRepository(session)
-    course_id = repository.next_identity()
+    course_id = CourseId(id=repository.next_identity())
     course = DomainCourse(id=course_id, name=name)
-    
+
     # When
     repository.add(course)
     assert course.id is not None

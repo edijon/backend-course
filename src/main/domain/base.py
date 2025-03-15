@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+import uuid
 
 
 class BaseIdentifier(BaseModel):
@@ -13,5 +14,4 @@ class BaseIdentifier(BaseModel):
 class BaseRepository:
     """Base repository with common functionality."""
     def next_identity(self):
-        import uuid
         return str(uuid.uuid4())

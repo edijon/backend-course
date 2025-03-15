@@ -1,9 +1,8 @@
 from src.main.domain.room import Room, RoomId
-import pytest
+
 
 class TestRoom:
     """Test cases for Room class."""
-    
     def test_given_name_and_description_when_create_room_then_return_room(self):
         # Given
         room_id = RoomId(id="1")

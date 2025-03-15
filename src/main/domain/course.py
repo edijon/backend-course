@@ -3,14 +3,17 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from .base import BaseIdentifier
 
+
 class CourseId(BaseIdentifier):
     """Value object holding Course identity."""
     pass
+
 
 class Course(BaseModel):
     """Aggregate root, entity holding course."""
     id: CourseId
     name: str
+
 
 class ICourseRepository(ABC):
     """Interface for handling courses persistence."""

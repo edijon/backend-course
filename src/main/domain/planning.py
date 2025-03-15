@@ -48,7 +48,8 @@ class PlanningSlot(BaseModel):
         end_time = time(self.hours_end, self.minutes_end)
         if end_time <= start_time:
             raise ValueError("End time must be after start time")
-        duration = timedelta(hours=end_time.hour, minutes=end_time.minute) - timedelta(hours=start_time.hour, minutes=start_time.minute)
+        duration = timedelta(
+            hours=end_time.hour, minutes=end_time.minute) - timedelta(hours=start_time.hour, minutes=start_time.minute)
         if duration < timedelta(minutes=30):
             raise ValueError("Slot duration must be at least 30 minutes")
         if duration > timedelta(hours=4):
@@ -92,7 +93,7 @@ class Planning(BaseModel):
         return self
 
     def _slots_collide(self, slot1: PlanningSlot, slot2: PlanningSlot) -> bool:
-        # Les collisions se produisent si deux slots d'une même promotion, du même enseignant ou dans la même salle se chevauchent.
+        # Collisions occur if two slots of the same promotion, teacher, or room overlap.
         if slot1.promotion_id == slot2.promotion_id or slot1.teacher_id == slot2.teacher_id or slot1.room_id == slot2.room_id:
             start1 = time(slot1.hours_start, slot1.minutes_start)
             end1 = time(slot1.hours_end, slot1.minutes_end)
@@ -136,6 +137,7 @@ class Planning(BaseModel):
         temp = self.model_copy(update={"slots": new_slots})
         temp.check_no_collisions()
         self.slots = new_slots
+
 
 class IPlanningRepository(ABC):
     """Interface for handling plannings persistence."""

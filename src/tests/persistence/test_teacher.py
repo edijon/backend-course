@@ -1,8 +1,8 @@
-from src.main.domain import Teacher as DomainTeacher
-from src.main.domain import BaseRepository, ITeacherRepository, TeacherId
+from src.main.domain import Teacher as DomainTeacher, BaseRepository, ITeacherRepository, TeacherId
 from sqlmodel import Session, create_engine, SQLModel
-from src.main.persistence.teacher import Teacher, TeacherRepository
+from src.main.persistence.teacher import TeacherRepository
 import pytest
+
 
 class TeacherRepositoryDumb(BaseRepository, ITeacherRepository):
     """Dumb implementation of ITeacherRepository."""
@@ -20,6 +20,7 @@ class TeacherRepositoryDumb(BaseRepository, ITeacherRepository):
             if str(teacher.id) == str(id):
                 return teacher
         raise ValueError("Teacher not found")
+
 
 class TeacherRepositoryException(TeacherRepositoryDumb):
     def find_all(self):
@@ -40,14 +41,12 @@ def session_fixture():
         yield session
     SQLModel.metadata.drop_all(engine)
 
+
 def test_teacher_repository(session):
     # Given
-    name = "Doe"
-    firstname = "John"
     repository = TeacherRepository(session)
-    teacher_id = repository.next_identity()
-    teacher = DomainTeacher(id=teacher_id, name=name, firstname=firstname)
-    
+    teacher = DomainTeacher(id=TeacherId(id=repository.next_identity()), name="Doe", firstname="John")
+
     # When
     repository.add(teacher)
     assert teacher.id is not None

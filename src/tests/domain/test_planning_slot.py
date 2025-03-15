@@ -3,13 +3,14 @@ from src.main.domain.promotion import PromotionId
 from src.main.domain.teacher import TeacherId
 from src.main.domain.course import CourseId
 from src.main.domain.room import RoomId
-from datetime import date
 import pytest
 
-class TestPlanningSlot:
-    """Test cases for PlanningSlot class. Même si dans le DDD, un PlanningSlot est manipulé via Planning,
-    ces tests vérifient les invariants de l’entité lors de sa création."""
 
+class TestPlanningSlot:
+    """
+    Test cases for PlanningSlot class. Even though in DDD, a PlanningSlot is manipulated via Planning,
+    these tests verify the invariants of the entity during its creation.
+    """
     @pytest.fixture
     def common_entities(self):
         return {

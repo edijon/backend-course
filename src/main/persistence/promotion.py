@@ -2,7 +2,6 @@ from sqlmodel import Session, select, SQLModel, Field
 from typing import List
 from src.main.domain.promotion import IPromotionRepository, Promotion as DomainPromotion, PromotionId
 from src.main.domain.base import BaseRepository
-import uuid
 
 
 class Promotion(SQLModel, table=True):
@@ -24,7 +23,7 @@ class PromotionRepository(BaseRepository, IPromotionRepository):
         return [self._to_domain(promotion) for promotion in results.all()]
 
     def find_by_id(self, id: PromotionId) -> DomainPromotion:
-        statement = select(Promotion).where(Promotion.id == id.id)
+        statement = select(Promotion).where(Promotion.id == str(id))
         result = self.session.exec(statement).first()
         if not result:
             raise ValueError("Promotion not found")
@@ -32,7 +31,7 @@ class PromotionRepository(BaseRepository, IPromotionRepository):
 
     def add(self, promotion: DomainPromotion) -> None:
         db_promotion = Promotion(
-            id=promotion.id.id,
+            id=str(promotion.id),
             study_year=promotion.study_year,
             diploma=promotion.diploma,
             name=promotion.name
@@ -42,7 +41,7 @@ class PromotionRepository(BaseRepository, IPromotionRepository):
 
     def update(self, promotion: DomainPromotion) -> None:
         db_promotion = Promotion(
-            id=promotion.id.id,
+            id=str(promotion.id),
             study_year=promotion.study_year,
             diploma=promotion.diploma,
             name=promotion.name
@@ -51,8 +50,7 @@ class PromotionRepository(BaseRepository, IPromotionRepository):
         self.session.commit()
 
     def delete(self, id: PromotionId) -> None:
-        promotion = self.find_by_id(id)
-        db_promotion = self.session.get(Promotion, id.id)
+        db_promotion = self.session.get(Promotion, str(id))
         self.session.delete(db_promotion)
         self.session.commit()
 

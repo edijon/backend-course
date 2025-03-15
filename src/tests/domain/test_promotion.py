@@ -1,10 +1,8 @@
 from src.main.domain.promotion import Promotion, PromotionId
-from datetime import date
-import pytest
+
 
 class TestPromotion:
     """Test cases for Promotion class."""
-    
     def test_given_study_year_and_diploma_and_name_when_create_promotion_then_return_promotion(self):
         # Given
         promotion_id = PromotionId(id="1")

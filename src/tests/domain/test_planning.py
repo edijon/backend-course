@@ -6,9 +6,9 @@ from src.main.domain.room import RoomId
 from datetime import date
 import pytest
 
+
 class TestPlanning:
     """Test cases for Planning aggregate and its slot management methods."""
-
     @pytest.fixture
     def common_entities(self):
         return {
@@ -24,11 +24,11 @@ class TestPlanning:
 
     @pytest.fixture
     def empty_planning(self, common_entities):
-        # Création d'un planning sans slots
         planning_id = PlanningId(id="1")
-        return Planning(id=planning_id, date=date(2021, 9, 1), promotion_id=common_entities["promotion1"], slots=[])
+        slots = []
+        return Planning(id=planning_id, date=date(2021, 9, 1), promotion_id=common_entities["promotion1"], slots=slots)
 
-    def create_slot(self, slot_id: str, start_hour: int, start_min: int, end_hour: int, end_min: int, common_entities, 
+    def create_slot(self, slot_id: str, start_hour: int, start_min: int, end_hour: int, end_min: int, common_entities,
                     promo_key="promotion1", teacher_key="teacher1", course_key="course1", room_key="room1"):
         return PlanningSlot(
             id=PlanningSlotId(id=slot_id),
@@ -48,7 +48,8 @@ class TestPlanning:
         date_planning = date(2021, 9, 1)
         promotion_id = common_entities["promotion1"]
         slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
-        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2", course_key="course2", room_key="room2")
+        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2",
+                                 course_key="course2", room_key="room2")
         # When
         planning = Planning(id=planning_id, date=date_planning, promotion_id=promotion_id, slots=[slot1, slot2])
         # Then
@@ -69,7 +70,7 @@ class TestPlanning:
     def test_add_colliding_slot_to_planning_then_raise_value_error(self, empty_planning, common_entities):
         # Given
         slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
-        slot2 = self.create_slot("2", 9, 30, 10, 30, common_entities)  # collision avec slot1 (même teacher, promotion, room)
+        slot2 = self.create_slot("2", 9, 30, 10, 30, common_entities)
         empty_planning.add_slot(slot1)
         # When/Then
         with pytest.raises(ValueError, match="Collision detected"):
@@ -78,7 +79,8 @@ class TestPlanning:
     def test_remove_slot_from_planning(self, empty_planning, common_entities):
         # Given
         slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
-        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2", course_key="course2", room_key="room2")
+        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2",
+                                 course_key="course2", room_key="room2")
         empty_planning.add_slot(slot1)
         empty_planning.add_slot(slot2)
         # When
@@ -91,7 +93,7 @@ class TestPlanning:
         # Given
         slot = self.create_slot("1", 9, 0, 10, 0, common_entities)
         empty_planning.add_slot(slot)
-        # When: mise à jour du slot pour décaler l'horaire (sans collision)
+        # When: updating the slot to shift the schedule (without collision)
         updated_slot = self.create_slot("1", 10, 0, 11, 0, common_entities)
         empty_planning.update_slot(updated_slot)
         # Then
@@ -101,13 +103,15 @@ class TestPlanning:
     def test_update_slot_in_planning_with_collision_then_raise_value_error(self, empty_planning, common_entities):
         # Given
         slot1 = self.create_slot("1", 9, 0, 10, 0, common_entities)
-        # Ici, slot2 initial est sans collision (différents teacher, promotion, etc.)
-        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2", course_key="course2", room_key="room2")
+        # Here, the initial slot2 is without collision (different teacher, promotion, etc.)
+        slot2 = self.create_slot("2", 10, 15, 11, 15, common_entities, promo_key="promotion2", teacher_key="teacher2",
+                                 course_key="course2", room_key="room2")
         empty_planning.add_slot(slot1)
         empty_planning.add_slot(slot2)
-        # When: mise à jour de slot2 pour créer une collision avec slot1
-        # Pour provoquer la collision, on force slot2 à partager le même teacher que slot1.
-        updated_slot2 = self.create_slot("2", 9, 30, 10, 30, common_entities, promo_key="promotion2", teacher_key="teacher1", course_key="course2", room_key="room2")
+        # When: updating slot2 to create a collision with slot1
+        # To cause the collision, we force slot2 to share the same teacher as slot1.
+        updated_slot2 = self.create_slot("2", 9, 30, 10, 30, common_entities, promo_key="promotion2", teacher_key="teacher1",
+                                         course_key="course2", room_key="room2")
         with pytest.raises(ValueError, match="Collision detected"):
             empty_planning.update_slot(updated_slot2)
 

@@ -1,7 +1,6 @@
-from src.main.domain import Room as DomainRoom
-from src.main.domain import BaseRepository, IRoomRepository, RoomId
+from src.main.domain import Room as DomainRoom, BaseRepository, IRoomRepository, RoomId
 from sqlmodel import Session, create_engine, SQLModel
-from src.main.persistence.room import Room, RoomRepository
+from src.main.persistence.room import RoomRepository
 import pytest
 
 
@@ -22,6 +21,7 @@ class RoomRepositoryDumb(BaseRepository, IRoomRepository):
                 return room
         raise ValueError("Room not found")
 
+
 class RoomRepositoryException(RoomRepositoryDumb):
     def find_all(self):
         raise Exception("Test exception")
@@ -41,22 +41,22 @@ def session_fixture():
         yield session
     SQLModel.metadata.drop_all(engine)
 
+
 def test_room_repository(session):
     # Given
-    name = "Room A"
-    description = "Description A"
+    name, description = "Room A", "Description A"
     repository = RoomRepository(session)
-    room_id = repository.next_identity()
+    room_id = RoomId(id=repository.next_identity())
     room = DomainRoom(id=room_id, name=name, description=description)
-    
+
     # When
     repository.add(room)
     assert room.id is not None
 
     fetched_room = repository.find_by_id(room.id)
     assert fetched_room is not None
-    assert fetched_room.name == "Room A"
-    assert fetched_room.description == "Description A"
+    assert fetched_room.name == name
+    assert fetched_room.description == description
 
     fetched_room.name = "Room B"
     repository.update(fetched_room)

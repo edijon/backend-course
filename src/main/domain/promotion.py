@@ -3,9 +3,11 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from .base import BaseIdentifier
 
+
 class PromotionId(BaseIdentifier):
     """Value object holding Promotion identity."""
     pass
+
 
 class Promotion(BaseModel):
     """Aggregate root, entity holding promotion."""
@@ -13,6 +15,7 @@ class Promotion(BaseModel):
     study_year: int
     diploma: str
     name: str
+
 
 class IPromotionRepository(ABC):
     """Interface for handling promotions persistence."""

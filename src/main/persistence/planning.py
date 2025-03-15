@@ -1,7 +1,8 @@
-from sqlmodel import Session, select, SQLModel, Field, Relationship, ForeignKey
+from sqlmodel import Session, select, SQLModel, Field, Relationship
 from typing import List
 from datetime import date
-from src.main.domain.planning import IPlanningRepository, Planning as DomainPlanning, PlanningId, PlanningSlot as DomainPlanningSlot, PlanningSlotId
+from src.main.domain.planning import (
+    IPlanningRepository, Planning as DomainPlanning, PlanningId, PlanningSlot as DomainPlanningSlot, PlanningSlotId)
 from src.main.domain.base import BaseRepository
 from src.main.domain.promotion import PromotionId
 from src.main.domain.teacher import TeacherId
@@ -50,7 +51,7 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
         return self._to_domain(result)
 
     def find_by_date_and_promotion(self, date: date, promotion_id: PromotionId) -> List[DomainPlanning]:
-        statement = select(Planning).where(Planning.date == date, Planning.promotion_id == promotion_id.id)
+        statement = select(Planning).where(Planning.date == date, Planning.promotion_id == str(promotion_id))
         results = self.session.exec(statement)
         return [self._to_domain(planning) for planning in results.all()]
 
@@ -151,27 +152,27 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
 
     def add_slot(self, planning_id: PlanningId, slot: DomainPlanningSlot) -> None:
         db_slot = self._to_db_slot(slot)
-        db_slot.planning_id = planning_id.id
+        db_slot.planning_id = str(planning_id)
         self.session.add(db_slot)
         self.session.commit()
 
     def update_slot(self, planning_id: PlanningId, slot: DomainPlanningSlot) -> None:
-        db_slot = self.session.get(PlanningSlot, slot.id.id)
-        if not db_slot or db_slot.planning_id != planning_id.id:
+        db_slot = self.session.get(PlanningSlot, str(slot.id))
+        if not db_slot or db_slot.planning_id != str(planning_id):
             raise ValueError("Planning slot not found")
         db_slot.hours_start = slot.hours_start
         db_slot.minutes_start = slot.minutes_start
         db_slot.hours_end = slot.hours_end
         db_slot.minutes_end = slot.minutes_end
-        db_slot.teacher_id = slot.teacher_id.id
-        db_slot.course_id = slot.course_id.id
-        db_slot.room_id = slot.room_id.id
+        db_slot.teacher_id = str(slot.teacher_id)
+        db_slot.course_id = str(slot.course_id)
+        db_slot.room_id = str(slot.room_id)
         self.session.add(db_slot)
         self.session.commit()
 
     def delete_slot(self, planning_id: PlanningId, slot_id: PlanningSlotId) -> None:
-        db_slot = self.session.get(PlanningSlot, slot_id.id)
-        if not db_slot or db_slot.planning_id != planning_id.id:
+        db_slot = self.session.get(PlanningSlot, str(slot_id))
+        if not db_slot or db_slot.planning_id != str(planning_id):
             raise ValueError("Planning slot not found")
         self.session.delete(db_slot)
         self.session.commit()

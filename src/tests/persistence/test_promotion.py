@@ -1,7 +1,7 @@
 from src.main.domain import BaseRepository, IPromotionRepository, Promotion as DomainPromotion, PromotionId
 import pytest
 from sqlmodel import Session, create_engine
-from src.main.persistence import Promotion, SQLModel, PromotionRepository
+from src.main.persistence import SQLModel, PromotionRepository
 
 
 class PromotionRepositoryDumb(BaseRepository, IPromotionRepository):
@@ -21,6 +21,7 @@ class PromotionRepositoryDumb(BaseRepository, IPromotionRepository):
                 return promotion
         raise ValueError("Promotion not found")
 
+
 class PromotionRepositoryException(PromotionRepositoryDumb):
     def find_all(self):
         raise Exception("Test exception")
@@ -32,6 +33,7 @@ class PromotionRepositoryException(PromotionRepositoryDumb):
 DATABASE_URL = "sqlite:///test.db"
 engine = create_engine(DATABASE_URL)
 
+
 @pytest.fixture(name="session")
 def session_fixture():
     SQLModel.metadata.create_all(engine)
@@ -39,14 +41,13 @@ def session_fixture():
         yield session
     SQLModel.metadata.drop_all(engine)
 
+
 def test_promotion_repository(session):
     # Given
-    study_year = 2
-    diploma = "DEUST"
-    name = "Kempf"
     repository = PromotionRepository(session)
     promotion_id = PromotionId(id=repository.next_identity())
-    promotion = DomainPromotion(id=promotion_id, study_year=study_year, diploma=diploma, name=name)
+    promotion = DomainPromotion(id=promotion_id, study_year=2, diploma="DEUST", name="Kempf")
+
     # When
     repository.add(promotion)
     assert promotion.id is not None
