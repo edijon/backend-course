@@ -21,6 +21,25 @@ class PromotionRepositoryDumb(BaseRepository, IPromotionRepository):
                 return promotion
         raise ValueError("Promotion not found")
 
+    def add(self, promotion: DomainPromotion) -> None:
+        self.promotions.append(promotion)
+
+    def update(self, promotion: DomainPromotion) -> None:
+        for i, p in enumerate(self.promotions):
+            if p.id == promotion.id:
+                self.promotions[i] = promotion
+                break
+        else:
+            raise ValueError("Promotion not found")
+
+    def delete(self, id: PromotionId) -> None:
+        for i, p in enumerate(self.promotions):
+            if p.id == id:
+                del self.promotions[i]
+                break
+        else:
+            raise ValueError("Promotion not found")
+
 
 class PromotionRepositoryException(PromotionRepositoryDumb):
     def find_all(self):

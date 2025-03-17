@@ -50,7 +50,7 @@ def setup_module(module):
             id=domain.PlanningId(id="2"), date=date(2023, 10, 11), promotion_id=domain.PromotionId(id="2"), slots=[])
     ]
     for planning in plannings:
-        state.repository_plannings.save(planning)
+        state.repository_plannings.add(planning)
 
 
 def test_get_plannings():

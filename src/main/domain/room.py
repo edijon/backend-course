@@ -29,3 +29,15 @@ class IRoomRepository(ABC):
     @abstractmethod
     def find_by_id(self, id: RoomId) -> Room:
         raise NotImplementedError
+
+    @abstractmethod
+    def add(self, room: Room) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, room: Room) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, id: RoomId) -> None:
+        raise NotImplementedError

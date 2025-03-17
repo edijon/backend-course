@@ -34,7 +34,11 @@ async def add_course(course: Course, user: dict = Depends(get_current_user)) -> 
     """
     Add a new course to the repository.
     """
-    # Add logic to save the course to the repository
+    try:
+        course_entity = domain.Course(id=domain.CourseId(id=course.id), name=course.name)
+        state.repository_courses.add(course_entity)
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return course
 
 
@@ -43,7 +47,14 @@ async def update_course(course_id: str, course: Course, user: dict = Depends(get
     """
     Update an existing course.
     """
-    # Add logic to update the course in the repository
+    try:
+        course_entity = state.repository_courses.find_by_id(domain.CourseId(id=course_id))
+        if not course_entity:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+        course_entity.name = course.name
+        state.repository_courses.update(course_entity)
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return course
 
 
@@ -52,7 +63,13 @@ async def delete_course(course_id: str, user: dict = Depends(get_current_user)) 
     """
     Delete a course by its ID.
     """
-    # Add logic to delete the course from the repository
+    try:
+        course_entity = state.repository_courses.find_by_id(domain.CourseId(id=course_id))
+        if not course_entity:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+        state.repository_courses.delete(course_entity.id)
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return {"message": "Course deleted"}
 
 

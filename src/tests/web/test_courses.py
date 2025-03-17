@@ -36,18 +36,18 @@ class TestCoursesEndpoint:
     def setup_method(self):
         self.client = TestClient(app)
 
+    def test_given_repository_when_get_courses_raises_exception_then_get_500(self):
+        from src.main.web import state
+        state.repository_courses = CourseRepositoryException()
+        response = self.client.get(API_COURSES)
+        assert_response_status(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def test_given_repository_when_get_courses_then_get_200_and_courses_list(self):
         from src.main.web import state
         state.repository_courses = CourseRepositoryDumb()
         response = self.client.get(API_COURSES)
         assert_response_status(response, status.HTTP_200_OK)
         assert_list_of_models(response.json(), Course)
-
-    def test_given_repository_when_get_courses_raises_exception_then_get_500(self):
-        from src.main.web import state
-        state.repository_courses = CourseRepositoryException()
-        response = self.client.get(API_COURSES)
-        assert_response_status(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_given_valid_token_when_add_course_then_get_200(self):
         token = get_auth_token()

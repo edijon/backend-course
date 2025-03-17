@@ -21,6 +21,19 @@ class TeacherRepositoryDumb(BaseRepository, ITeacherRepository):
                 return teacher
         raise ValueError("Teacher not found")
 
+    def add(self, teacher: DomainTeacher):
+        self.teachers.append(teacher)
+
+    def update(self, teacher: DomainTeacher):
+        for i, t in enumerate(self.teachers):
+            if str(t.id) == str(teacher.id):
+                self.teachers[i] = teacher
+                return
+        raise ValueError("Teacher not found")
+
+    def delete(self, id: TeacherId):
+        self.teachers = [t for t in self.teachers if str(t.id) != str(id)]
+
 
 class TeacherRepositoryException(TeacherRepositoryDumb):
     def find_all(self):

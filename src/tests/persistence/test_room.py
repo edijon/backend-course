@@ -21,6 +21,19 @@ class RoomRepositoryDumb(BaseRepository, IRoomRepository):
                 return room
         raise ValueError("Room not found")
 
+    def add(self, room: DomainRoom):
+        self.rooms.append(room)
+
+    def update(self, room: DomainRoom):
+        for i, existing_room in enumerate(self.rooms):
+            if str(existing_room.id) == str(room.id):
+                self.rooms[i] = room
+                return
+        raise ValueError("Room not found")
+
+    def delete(self, id: RoomId):
+        self.rooms = [room for room in self.rooms if str(room.id) != str(id)]
+
 
 class RoomRepositoryException(RoomRepositoryDumb):
     def find_all(self):

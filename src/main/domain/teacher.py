@@ -29,3 +29,15 @@ class ITeacherRepository(ABC):
     @abstractmethod
     def find_by_id(self, id: TeacherId) -> Teacher:
         raise NotImplementedError
+
+    @abstractmethod
+    def add(self, teacher: Teacher) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, teacher: Teacher) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, id: TeacherId) -> None:
+        raise NotImplementedError

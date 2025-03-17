@@ -22,6 +22,25 @@ class CourseRepositoryDumb(BaseRepository, ICourseRepository):
                 return course
         raise ValueError("Course not found")
 
+    def add(self, course: DomainCourse):
+        self.courses.append(course)
+
+    def update(self, course: DomainCourse):
+        for i, c in enumerate(self.courses):
+            if c.id == course.id:
+                self.courses[i] = course
+                break
+        else:
+            raise ValueError(f"Course {course.id} not found")
+
+    def delete(self, id: CourseId):
+        for i, c in enumerate(self.courses):
+            if c.id == id:
+                del self.courses[i]
+                break
+        else:
+            raise ValueError(f"Course {id} not found")
+
 
 class CourseRepositoryException(CourseRepositoryDumb):
     def find_all(self):

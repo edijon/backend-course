@@ -156,3 +156,15 @@ class IPlanningRepository(ABC):
     @abstractmethod
     def find_by_date_and_promotion(self, date: date, promotion_id: PromotionId) -> List[Planning]:
         raise NotImplementedError
+
+    @abstractmethod
+    def add(self, planning: Planning) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, planning: Planning) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, planning: Planning) -> None:
+        raise NotImplementedError

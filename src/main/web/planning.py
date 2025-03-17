@@ -180,7 +180,7 @@ async def add_planning(planning: PlanningWrite) -> Planning:
             promotion_id=domain.PromotionId(id=planning.promotion_id),
             slots=planning_slots
         )
-        state.repository_plannings.save(planning_entity)
+        state.repository_plannings.add(planning_entity)
         return await get_planning_from_entity(planning_entity)
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
@@ -218,7 +218,7 @@ async def add_planning_slot(planning_id: str, slot: PlanningSlotWrite) -> Planni
         )
 
         planning.slots.append(planning_slot)
-        state.repository_plannings.save(planning)
+        state.repository_plannings.update(planning)
         return await get_planning_from_entity(planning)
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))

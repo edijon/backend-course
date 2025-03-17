@@ -35,7 +35,13 @@ async def add_room(room: Room, user: dict = Depends(get_current_user)) -> Room:
     """
     Add a new room to the repository.
     """
-    # Add logic to save the room to the repository
+    try:
+        room_entity = domain.Room(id=domain.RoomId(
+            id=state.repository_rooms.next_identity()),
+            name=room.name, description=room.description)
+        state.repository_rooms.add(room_entity)
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return room
 
 
@@ -44,7 +50,15 @@ async def update_room(room_id: str, room: Room, user: dict = Depends(get_current
     """
     Update an existing room.
     """
-    # Add logic to update the room in the repository
+    try:
+        room_entity = state.repository_rooms.find_by_id(domain.RoomId(id=room_id))
+        if not room_entity:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+        room_entity.name = room.name
+        room_entity.description = room.description
+        state.repository_rooms.update(room_entity)
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return room
 
 
@@ -53,7 +67,13 @@ async def delete_room(room_id: str, user: dict = Depends(get_current_user)) -> d
     """
     Delete a room by its ID.
     """
-    # Add logic to delete the room from the repository
+    try:
+        room_entity = state.repository_rooms.find_by_id(domain.RoomId(id=room_id))
+        if not room_entity:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+        state.repository_rooms.delete(domain.RoomId(id=room_id))
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return {"message": "Room deleted"}
 
 

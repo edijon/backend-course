@@ -2,7 +2,8 @@ from typing import List
 from datetime import date
 import pytest
 from sqlmodel import Session, create_engine, SQLModel
-from src.main.domain.planning import Planning as DomainPlanning, PlanningId, PlanningSlot as DomainPlanningSlot, PlanningSlotId
+from src.main.domain.planning import (
+    IPlanningRepository, Planning as DomainPlanning, PlanningId, PlanningSlot as DomainPlanningSlot, PlanningSlotId)
 from src.main.domain.promotion import PromotionId
 from src.main.domain.teacher import TeacherId
 from src.main.domain.course import CourseId
@@ -11,7 +12,7 @@ from src.main.persistence.planning import PlanningRepository
 import uuid
 
 
-class PlanningRepositoryDumb:
+class PlanningRepositoryDumb(IPlanningRepository):
     def __init__(self):
         self.plannings = []
 
@@ -27,12 +28,25 @@ class PlanningRepositoryDumb:
     def find_by_date_and_promotion(self, date: date, promotion_id: PromotionId) -> List[DomainPlanning]:
         return [planning for planning in self.plannings if planning.date == date and planning.promotion_id == promotion_id]
 
-    def save(self, planning: DomainPlanning):
+    def add(self, planning: DomainPlanning):
         for i, existing_planning in enumerate(self.plannings):
             if existing_planning.id == planning.id:
                 self.plannings[i] = planning
                 return
         self.plannings.append(planning)
+
+    def delete(self, planning: DomainPlanning):
+        for i, existing_planning in enumerate(self.plannings):
+            if existing_planning.id == planning.id:
+                del self.plannings[i]
+                return
+
+    def update(self, planning: DomainPlanning):
+        for i, existing_planning in enumerate(self.plannings):
+            if existing_planning.id == planning.id:
+                self.plannings[i] = planning
+                return
+        raise ValueError("Planning not found")
 
 
 class PlanningRepositoryException(PlanningRepositoryDumb):

@@ -28,3 +28,15 @@ class ICourseRepository(ABC):
     @abstractmethod
     def find_by_id(self, id: CourseId) -> Course:
         raise NotImplementedError
+
+    @abstractmethod
+    def add(self, course: Course) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, course: Course) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, id: CourseId) -> None:
+        raise NotImplementedError

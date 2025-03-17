@@ -30,3 +30,15 @@ class IPromotionRepository(ABC):
     @abstractmethod
     def find_by_id(self, id: PromotionId) -> Promotion:
         raise NotImplementedError
+
+    @abstractmethod
+    def add(self, promotion: Promotion) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, promotion: Promotion) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, id: PromotionId) -> None:
+        raise NotImplementedError

@@ -35,7 +35,15 @@ async def add_teacher(teacher: Teacher, user: dict = Depends(get_current_user)) 
     """
     Add a new teacher to the repository.
     """
-    # Add logic to save the teacher to the repository
+    try:
+        teacher_entity = domain.Teacher(
+            id=domain.TeacherId(id=teacher.id),
+            name=teacher.name,
+            firstname=teacher.firstname
+        )
+        state.repository_teachers.add(teacher_entity)
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return teacher
 
 
@@ -44,7 +52,15 @@ async def update_teacher(teacher_id: str, teacher: Teacher, user: dict = Depends
     """
     Update an existing teacher's information.
     """
-    # Add logic to update the teacher in the repository
+    try:
+        teacher_entity = state.repository_teachers.find_by_id(domain.TeacherId(id=teacher_id))
+        teacher_entity.name = teacher.name
+        teacher_entity.firstname = teacher.firstname
+        state.repository_teachers.update(teacher_entity)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Teacher not found")
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return teacher
 
 
@@ -53,7 +69,13 @@ async def delete_teacher(teacher_id: str, user: dict = Depends(get_current_user)
     """
     Delete a teacher by their ID.
     """
-    # Add logic to delete the teacher from the repository
+    try:
+        teacher_entity = state.repository_teachers.find_by_id(domain.TeacherId(id=teacher_id))
+        if not teacher_entity:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Teacher not found")
+        state.repository_teachers.delete(domain.TeacherId(id=teacher_id))
+    except Exception as ex:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=repr(ex))
     return {"message": "Teacher deleted"}
 
 
