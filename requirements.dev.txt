@@ -1,0 +1,6 @@
+# Contains requirements for development purpose (not needed in production).
+flake8
+bandit
+httpx
+pytest
+coverage
