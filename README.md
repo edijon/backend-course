@@ -2,6 +2,10 @@
 
 Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo.com/).
 
+### Objet
+
+Concevoir et réaliser le code `backend` permettant de gérer un `planning étudiant`.
+
 ## Sommaire
 
 1. [Préparer son environnement de développement](#préparer-son-environnement-de-développement)
@@ -10,6 +14,11 @@ Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo
     - [Règles métier](#règles-métier)
     - [Règles techniques](#règles-techniques)
     - [Qualités appréciées - Bonus](#qualités-appréciées---bonus)
+3. [Résultat projet - Installation pré-requis](#résultat-projet---installation-pré-requis)
+4. [Résultat projet - Exécuter](#résultat-projet---exécuter)
+5. [Résultat projet - Tester](#résultat-projet---tester)
+6. [Résultat projet - Structure](#résultat-projet---structure)
+
 
 
 ## Préparer son environnement de développement
@@ -51,10 +60,6 @@ Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo
     ```
 
 ## Consignes projet
-
-### Objet
-
-Concevoir et réaliser le code `backend` permettant de gérer un `planning étudiant`.
 
 ### Organisation
 
@@ -126,3 +131,128 @@ Concevoir et réaliser le code `backend` permettant de gérer un `planning étud
 - Des journaux, `logs`, permettent de suivre le fonctionnement de l'application et comprendre les erreurs.
 - La documentation permet à un profil développeur de contribuer au projet.
 - La documentation permet à un profil développeur d'instancier le projet.
+
+## Résultat projet - Installation pré-requis
+
+### Prérequis techniques
+
+- **Python** : Version >= 3.10
+- **FastAPI** : Utilisé comme framework web
+- **PostgreSQL** : Utilisé comme base de données
+- **Dépendances** : Installables via `pip`
+  - `requirements.txt` pour l'installation standard
+  - `requirements.dev.txt` pour les dépendances de développement et tests
+
+### Installation des dépendances
+
+```bash
+# Installation des dépendances principales
+python3 -m pip install -r requirements.txt
+
+# Installation des dépendances de développement (optionnel)
+python3 -m pip install -r requirements.dev.txt
+```
+
+### Base de données (PostgreSQL) via Docker
+
+Pour les phases de développement, un service PostgreSQL peut être lancé via Docker Compose :
+
+```bash
+docker compose -f docker/docker-compose.dev.yml up -d
+```
+
+*Remarque : Ce service se relance à chaque démarrage. Pour l'arrêter :*
+
+```bash
+docker compose -f docker/docker-compose.dev.yml down
+```
+
+### Variables d'environnement et fichiers de configuration
+
+Aucune variable d'environnement ni fichier de configuration (.env, config.json) n'est requis pour l'exécution en mode développement.
+
+## Résultat projet - Exécuter
+
+### Démarrage de l'application
+
+Utiliser la commande suivante pour lancer le projet en local :
+
+```bash
+fastapi dev src/main/web/main.py
+```
+
+### Conteneurisation
+
+Le projet n'est pas encore conteneurisé.
+
+### Base de données
+
+Le serveur PostgreSQL doit être lancé avant d'exécuter l'application (voir section Docker ci-dessus).
+
+## Résultat projet - Tester
+
+### Exécution des tests
+
+Tests unitaires et d'intégration :
+
+```bash
+coverage run -m pytest
+```
+
+Pour voir le rapport de couverture :
+
+```bash
+coverage report -m
+```
+
+### Linter (analyse statique)
+
+Vérification des règles de style du code avec `flake8` :
+
+```bash
+flake8
+```
+
+### Sécurité
+
+Analyse des vulnérabilités avec `bandit` :
+
+```bash
+bandit -lll src/main/**/*.py
+```
+
+### Intégration Continue (CI)
+
+Toutes les vérifications sont automatisées dans **GitHub Actions** : fichier `.github/workflows/ci.yml`.
+
+## Résultat projet - Structure
+
+### Organisation des fichiers et dossiers
+
+```
+.
+├── LICENSE
+├── README.md
+├── docker
+│   └── docker-compose.dev.yml
+├── requirements.dev.txt
+├── requirements.txt
+├── src
+│   ├── __init__.py
+│   ├── main
+│   │   ├── __init__.py
+│   │   ├── domain # Logique métier
+│   │   ├── persistence # Gestion de la base de données
+│   │   └── web # API FastAPI
+│   └── tests # Fichiers tests, structure miroir de main
+│       ├── domain
+│       ├── persistence
+│       └── web
+```
+
+### Explication des dossiers principaux
+
+- **`src/main/domain/`** : Contient la logique métier.
+- **`src/main/persistence/`** : Gestion technique des données (ex: PostgreSQL).
+- **`src/main/web/`** : Contient les endpoints FastAPI.
+- **`src/tests/`** : Tests unitaires et d'intégration, organisés en miroirs des modules de `src/main/`.
