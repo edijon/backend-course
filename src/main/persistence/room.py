@@ -1,3 +1,7 @@
+"""
+This module contains the definition of the Room model in terms of a SQLModel model, and the RoomRepository
+class that provides methods for interacting with the database.
+"""
 from sqlmodel import Session, select, SQLModel, Field
 from typing import List
 from src.main.domain.room import IRoomRepository, Room as DomainRoom, RoomId

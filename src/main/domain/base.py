@@ -1,3 +1,6 @@
+"""
+This module contains basic classes from which all domain objects will inherit.
+"""
 from pydantic import BaseModel, ConfigDict
 import uuid
 

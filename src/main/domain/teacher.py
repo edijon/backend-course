@@ -1,3 +1,6 @@
+"""
+This module contains the definition of the Teacher domain entity.
+"""
 from typing import List
 from abc import ABC, abstractmethod
 from pydantic import BaseModel

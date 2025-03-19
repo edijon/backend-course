@@ -1,3 +1,10 @@
+"""
+This module defines the persistence layer for Planning and PlanningSlot entities.
+It provides the SQLModel-based implementation for storing and retrieving planning-related
+data from the database. The module includes the definition of Planning and PlanningSlot
+tables, and a PlanningRepository class that offers CRUD operations and utility methods
+for converting between domain and database representations of planning entities.
+"""
 from sqlmodel import Session, select, SQLModel, Field, Relationship
 from typing import List
 from datetime import date

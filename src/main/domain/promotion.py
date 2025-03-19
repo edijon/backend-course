@@ -1,3 +1,6 @@
+"""
+This module contains the definition of the Promotion domain entity and its associated repository interface.
+"""
 from typing import List
 from abc import ABC, abstractmethod
 from pydantic import BaseModel

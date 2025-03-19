@@ -1,3 +1,9 @@
+"""
+This module contains the implementation of the REST API for the teachers
+endpoint using FastAPI. It exposes endpoints for listing all teachers,
+fetching a teacher by ID, creating a new teacher, updating an existing
+teacher, and deleting a teacher.
+"""
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
 from src.main import domain

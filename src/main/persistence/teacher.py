@@ -1,3 +1,7 @@
+"""
+This module contains the definition of the Teacher model in terms of a SQLModel model, and the TeacherRepository
+class that provides methods for interacting with the database.
+"""
 from sqlmodel import Session, select, SQLModel, Field
 from typing import List
 from src.main.domain.teacher import ITeacherRepository, Teacher as DomainTeacher, TeacherId

@@ -1,3 +1,10 @@
+"""
+This module defines the Room domain entity and related abstractions for managing room persistence.
+It includes the RoomId value object for uniquely identifying rooms, the Room aggregate root entity
+that describes the room's attributes, and the IRoomRepository interface for room persistence operations.
+The repository interface outlines methods for generating new room identities, retrieving rooms,
+and performing CRUD operations.
+"""
 from typing import List
 from abc import ABC, abstractmethod
 from pydantic import BaseModel

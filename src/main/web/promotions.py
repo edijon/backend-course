@@ -1,3 +1,9 @@
+"""
+This module contains the implementation of the REST API for the promotions
+endpoint using FastAPI. It exposes endpoints for listing all promotions,
+fetching a promotion by ID, creating a new promotion, updating an existing
+promotion, and deleting a promotion.
+"""
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
 from src.main import domain

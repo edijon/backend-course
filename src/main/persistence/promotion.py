@@ -1,3 +1,10 @@
+"""
+This module defines the persistence layer for the Promotion entity. It provides an implementation
+using SQLModel for storing and retrieving promotion-related data from the database. The module
+includes the definition of the Promotion table and a PromotionRepository class that offers
+CRUD operations and utility methods for converting between domain and database representations
+of promotion entities.
+"""
 from sqlmodel import Session, select, SQLModel, Field
 from typing import List
 from src.main.domain.promotion import IPromotionRepository, Promotion as DomainPromotion, PromotionId

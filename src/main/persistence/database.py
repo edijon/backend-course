@@ -1,3 +1,7 @@
+"""
+This module is a placeholder for the database connection management code.
+It uses the sqlmodel library as the ORM, which is not ready for production yet.
+"""
 from sqlmodel import SQLModel, create_engine, Session
 
 

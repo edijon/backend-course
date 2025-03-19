@@ -1,3 +1,8 @@
+"""
+This module contains the definition of the Planning domain entity, which represents a planning for a promotion.
+The Planning entity is an aggregate root that contains a list of PlanningSlot entities.
+A PlanningSlot represents a course that takes place at a given hour in a given room.
+"""
 from typing import List
 from abc import ABC, abstractmethod
 from datetime import time, timedelta, date
@@ -69,8 +74,8 @@ class PlanningId(BaseIdentifier):
 class Planning(BaseModel):
     """
     Aggregate root, entity holding planning.
-    Un Planning encapsule une liste de PlanningSlot. Pour respecter le DDD, un PlanningSlot ne peut être
-    manipulé que via cet agrégat.
+    A Planning encapsulates a list of PlanningSlot. To respect the DDD, a PlanningSlot can only be
+    manipulated through this aggregate.
     Attributes:
         id (PlanningId): Unique identifier for the planning.
         date (date): Date of the planning.
@@ -104,7 +109,7 @@ class Planning(BaseModel):
 
     def add_slot(self, slot: PlanningSlot) -> None:
         """
-        Ajoute un nouveau slot au planning en vérifiant qu'il n'entre pas en collision avec les slots existants.
+        Adds a new slot to the planning after checking that it does not collide with any existing slots.
         """
         for existing in self.slots:
             if self._slots_collide(existing, slot):
@@ -114,14 +119,14 @@ class Planning(BaseModel):
 
     def remove_slot(self, slot_id: PlanningSlotId) -> None:
         """
-        Supprime un slot du planning à partir de son identifiant.
+        Removes a slot from the planning given its identifier.
         """
         self.slots = [slot for slot in self.slots if slot.id != slot_id]
         self.check_no_collisions()
 
     def update_slot(self, updated_slot: PlanningSlot) -> None:
         """
-        Met à jour un slot existant dans le planning.
+        Updates an existing slot in the planning.
         """
         found = False
         new_slots = []
@@ -133,7 +138,7 @@ class Planning(BaseModel):
                 new_slots.append(slot)
         if not found:
             raise ValueError("Slot not found")
-        # Vérifie que la mise à jour ne génère pas de collision
+        # Ensure that the update does not cause any collision
         temp = self.model_copy(update={"slots": new_slots})
         temp.check_no_collisions()
         self.slots = new_slots

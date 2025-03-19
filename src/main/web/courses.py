@@ -1,3 +1,7 @@
+"""
+This module contains the implementation of the REST API for the courses
+endpoint using FastAPI.
+"""
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
 from src.main import domain
