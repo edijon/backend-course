@@ -52,9 +52,11 @@ jobs:
           mkdir -p .github/badges
           genbadge coverage -i coverage.xml -o .github/badges/coverage.svg
       - name: Commit and push coverage badge
+        env:
+          PAT_GITHUB: ${{ secrets.PAT_GITHUB }}
         run: |
-          git config --local user.name "github-actions"
-          git config --local user.email "github-actions@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .github/badges/coverage.svg
           git commit -m "Update coverage badge" || echo "No changes to commit"
-          git push
+          git push https://x-access-token:${PAT_GITHUB}@github.com/${{ github.repository }}.git HEAD:main
