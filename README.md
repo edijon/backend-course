@@ -1,5 +1,8 @@
 # Backend-course
 
+![CI](https://github.com/edijon/backend-course-with-fastapi/actions/workflows/ci.yml/badge.svg) ![Coverage](https://github.com/edijon/backend-course-with-fastapi/raw/main/coverage.svg)
+
+
 Cours de développement backend via Python et [FastAPI](https://fastapi.tiangolo.com/).
 
 ### Objet
