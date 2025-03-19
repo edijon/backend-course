@@ -33,7 +33,7 @@ jobs:
       - name: Generate coverage badge
         run: genbadge coverage -i coverage.xml -o coverage.svg
       - name: Upload coverage badge to GitHub Pages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-badge
           path: coverage.svg
