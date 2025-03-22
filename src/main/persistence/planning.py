@@ -78,34 +78,41 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
         db_planning = self.session.get(Planning, planning_id)
         if not db_planning:
             raise ValueError("Planning not found")
+        self._update_planning(db_planning, planning)
+
+    def _update_planning(self, db_planning: Planning, planning: DomainPlanning) -> None:
         db_planning.date = planning.date
         db_planning.promotion_id = str(planning.promotion_id)
 
         # Update existing slots and add new ones if necessary
         existing_slot_ids = {slot.id for slot in db_planning.slots}
-        new_slot_ids = {slot.id for slot in planning.slots}
+        new_slot_ids = {str(slot.id) for slot in planning.slots}
 
         # Delete slots that are no longer present
-        for slot in db_planning.slots:
+        for slot in list(db_planning.slots):
             if slot.id not in new_slot_ids:
                 self.session.delete(slot)
 
         # Update or add slots
         for slot in planning.slots:
-            if slot.id in existing_slot_ids:
-                db_slot = self.session.get(PlanningSlot, slot.id)
-                db_slot.hours_start = slot.hours_start
-                db_slot.minutes_start = slot.minutes_start
-                db_slot.hours_end = slot.hours_end
-                db_slot.minutes_end = slot.minutes_end
-                db_slot.teacher_id = str(slot.teacher_id)
-                db_slot.course_id = str(slot.course_id)
-                db_slot.room_id = str(slot.room_id)
+            slot_id = str(slot.id)
+            if slot_id in existing_slot_ids:
+                db_slot = self.session.get(PlanningSlot, slot_id)
+                if db_slot:
+                    self._update_slot(db_slot, slot)
             else:
-                db_slot = self._to_db_slot(slot, planning_id)
+                db_slot = self._to_db_slot(slot, str(planning.id))
                 self.session.add(db_slot)
-
         self.session.commit()
+
+    def _update_slot(self, db_slot: PlanningSlot, slot: DomainPlanningSlot) -> None:
+        db_slot.hours_start = slot.hours_start
+        db_slot.minutes_start = slot.minutes_start
+        db_slot.hours_end = slot.hours_end
+        db_slot.minutes_end = slot.minutes_end
+        db_slot.teacher_id = str(slot.teacher_id)
+        db_slot.course_id = str(slot.course_id)
+        db_slot.room_id = str(slot.room_id)
 
     def delete(self, planning: DomainPlanning) -> None:
         planning_id = str(planning.id)
@@ -158,8 +165,7 @@ class PlanningRepository(BaseRepository, IPlanningRepository):
         return self._to_domain_slot(result)
 
     def add_slot(self, planning_id: PlanningId, slot: DomainPlanningSlot) -> None:
-        db_slot = self._to_db_slot(slot)
-        db_slot.planning_id = str(planning_id)
+        db_slot = self._to_db_slot(slot, planning_id=str(planning_id))
         self.session.add(db_slot)
         self.session.commit()
 
